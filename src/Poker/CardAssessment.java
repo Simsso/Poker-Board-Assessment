@@ -7,9 +7,10 @@ import java.util.Collections;
  * Created by Denk on 21/02/17.
  */
 class CardAssessment {
-    public static HandName getRank(Card[] c) {
+    static HandName getRank(Card[] c) {
         validateParameter(c);
         Arrays.sort(c, Collections.reverseOrder()); // sort descending (e.g. A, J, 5, 4, 2)
+        // the following method calls (e.g. isRoyalFlush) require the card array to be sorted by card rank
 
         if (isRoyalFlush(c))
             return HandName.ROYAL_FLUSH;
@@ -43,16 +44,18 @@ class CardAssessment {
 
     private static void validateParameter(Card[] c) {
         if (c.length != 5) {
-            throw new IllegalArgumentException("Numer of cards must be 5");
+            throw new IllegalArgumentException("Number of cards must be 5");
         }
     }
 
     private static boolean isRoyalFlush(Card[] c) {
-        return (isStraightFlush(c) && c[0].rank == Rank.ACE);
+        return (isStraightFlush(c) &&
+                c[0].rank == Rank.ACE &&
+                c[1].rank == Rank.KING); // king check is required because a straight can also be A 2 3 4 5
     }
 
     private static boolean isStraightFlush(Card[] c) {
-        return isFlush(c) && isStraight(c);
+        return (isFlush(c) && isStraight(c));
     }
 
     private static boolean isFourOfAKind(Card[] c) {
@@ -65,14 +68,21 @@ class CardAssessment {
     }
 
     private static boolean isFlush(Card[] c) {
-        return (sameSuit(c[0], c[1], c[2], c[3], c[4]));
+        return (sameSuit(c));
     }
 
     private static boolean isStraight(Card[] c) {
         Rank prevRank = c[0].rank;
         for (int i = 1; i < c.length; i++) {
             Rank rank = c[i].rank;
-            if (Math.abs(prevRank.ordinal() - rank.ordinal()) != 1) {
+            if ( // not a straight conditions
+                    // normal straight: e.g. 9 8 7 6 5
+                    Math.abs(prevRank.ordinal() - rank.ordinal()) != 1 &&
+
+                    // lowest straight: A 2 3 4 5 (special case because A is high)
+                    // card array would be A 5 4 3 2 (for A 2 3 4 5 straight)
+                    !(prevRank == Rank.ACE && rank == Rank.FIVE)
+                    ) {
                 return false;
             }
             prevRank = rank;

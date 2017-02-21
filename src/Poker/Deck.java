@@ -32,6 +32,18 @@ public class Deck {
         return cards;
     }
 
+    // takes a card from the deck
+    // returns null if the card is not available
+    public Card getCard(Rank rank, Suit suit) {
+        for (Card card : availableCards) {
+            if (card.rank == rank && card.suit == suit) {
+                this.availableCards.remove(card);
+                return card;
+            }
+        }
+        return null;
+    }
+
     private static Card[] getDeckCards() {
         Card[] deck = new Card[52];
 
