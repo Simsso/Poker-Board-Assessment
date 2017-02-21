@@ -51,15 +51,18 @@ class CardAssessment {
     private static boolean isRoyalFlush(Card[] c) {
         return (isStraightFlush(c) &&
                 c[0].rank == Rank.ACE &&
-                c[1].rank == Rank.KING); // king check is required because a straight can also be A 2 3 4 5
+                c[1].rank == Rank.KING);
+                // king check is required because a straight can also be A 2 3 4 5
     }
 
     private static boolean isStraightFlush(Card[] c) {
-        return (isFlush(c) && isStraight(c));
+        return (isFlush(c) &&
+                isStraight(c));
     }
 
     private static boolean isFourOfAKind(Card[] c) {
-        return (sameRank(c[0], c[1], c[2], c[3]) || sameRank(c[1], c[2], c[3], c[4]));
+        return (sameRank(c[0], c[1], c[2], c[3]) ||
+                sameRank(c[1], c[2], c[3], c[4]));
     }
 
     private static boolean isFullHouse(Card[] c) {

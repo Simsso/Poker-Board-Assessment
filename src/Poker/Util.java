@@ -3,8 +3,8 @@ package Poker;
 /**
  * Created by Denk on 21/02/17.
  */
-public class Util {
-    public static int binaryDigitSum(int x) {
+class Util {
+    static int binaryDigitSum(int x) {
         int counter = 0,
                 max = 64;//(int)(Math.log(x + 1) / Math.log(2));
         for (int i = 0; i < max; i++) {
@@ -16,7 +16,7 @@ public class Util {
     }
 
     // http://stackoverflow.com/questions/36925730/java-calculating-binomial-coefficient
-    public static long binomial(int n, int k) {
+    static long binomial(int n, int k) {
         if (k > n - k) {
             k = n - k;
         }

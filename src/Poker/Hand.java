@@ -1,7 +1,5 @@
 package Poker;
 
-import java.util.Comparator;
-
 /**
  * Created by Denk on 21/02/17.
  */
@@ -9,7 +7,7 @@ public class Hand implements Comparable<Hand> {
     public final HandName name;
     public final Card[] cards;
 
-    public Hand(HandName name, Card[] cards) {
+    Hand(HandName name, Card[] cards) {
         if (cards.length != 5) {
             throw new IllegalArgumentException();
         }
@@ -33,42 +31,86 @@ public class Hand implements Comparable<Hand> {
             return -1;
         }
 
+        int comparison; // tmp variable for some case branches
+
         // both hands have the same hand name (e.g. both have a pair)
         switch (h1.name) {
             case ROYAL_FLUSH:
                 // two Royal Flushes are always the same rank
                 return 0;
+
             case FOUR_OF_A_KIND:
                 // for a sorted array containing four cards of a kind, the second, third, and fourth card always has the quad rank
                 // example: A 5 5 5 5 --> 5
                 // J J J J 4 --> J
                 Rank quadsRank1 = h1.cards[1].rank,
                         quadsRank2 = h2.cards[1].rank;
-                int comparison = quadsRank1.compareTo(quadsRank2);
+                comparison = quadsRank1.compareTo(quadsRank2);
                 if (comparison != 0) {
                     return comparison;
                 }
+                // look for kicker
                 Rank kickerRank1 = ((quadsRank1 == h1.cards[0].rank) ? h1.cards[4] : h1.cards[0]).rank,
                         kickerRank2 = ((quadsRank2 == h2.cards[0].rank) ? h2.cards[4] : h2.cards[0]).rank;
                 return kickerRank1.compareTo(kickerRank2);
+
             case FULL_HOUSE:
                 // for a full house the card in the middle (index = 2) is equal to the rank of the full house
-                Rank fullHouseRank1 = h1.cards[2].rank;
-                break;
+                Rank fullHouseRank1 = h1.cards[2].rank,
+                        fullHouseRank2 = h2.cards[2].rank;
+                comparison = fullHouseRank1.compareTo(fullHouseRank2);
+                if (comparison != 0) { // one full house is higher than the other one
+                    return comparison;
+                }
+                // pair decides
+                return compareFirstHigherCard(h1.cards, h2.cards);
+
             case THREE_OF_A_KIND:
-                //TODO: implement comparison
-                break;
+                // card in the middle (index = 2) is the rank of the trips
+                Rank tripsRank1 = h1.cards[2].rank,
+                        tripsRank2 = h2.cards[2].rank;
+                comparison = tripsRank1.compareTo(tripsRank2);
+                if (comparison != 0) {
+                    return comparison; // trips rank is different
+                }
+                // look for kickers (first and second kicker)
+                return compareFirstHigherCard(h1.cards, h2.cards);
+
             case TWO_PAIR:
-                //TODO: implement comparison
-                break;
+                // first pair
+                Rank firstPairRank1 = getPairRank(h1.cards),
+                        firstPairRank2 = getPairRank(h2.cards);
+                comparison = firstPairRank1.compareTo(firstPairRank2);
+                if (comparison != 0) {
+                    return comparison;
+                }
+
+                // second pair
+                Rank secondPairRank1 = getPairRank(h1.cards, firstPairRank1),
+                        secondPairRank2 = getPairRank(h2.cards, firstPairRank2);
+                comparison = secondPairRank1.compareTo(secondPairRank2);
+                if (comparison != 0) {
+                    return comparison;
+                }
+
+                // kicker
+                return compareFirstHigherCard(h1.cards, h2.cards);
+
             case PAIR:
-                //TODO: implement comparison
-                break;
+                Rank pairRank1 = getPairRank(h1.cards),
+                        pairRank2 = getPairRank(h2.cards);
+                comparison = pairRank1.compareTo(pairRank2);
+                if (comparison != 0) {
+                    return comparison;
+                }
+                // kickers
+                return compareFirstHigherCard(h1.cards, h2.cards);
+
+
             default:
                 // STRAIGHT_FLUSH, FLUSH, STRAIGHT, HIGH_CARD
                 return compareFirstHigherCard(h1.cards, h2.cards);
         }
-        return 0;
     }
 
     private int compareFirstHigherCard(Card[] c1, Card[] c2) {
@@ -80,6 +122,25 @@ public class Hand implements Comparable<Hand> {
             return comparison;
         }
         return 0;
+    }
+
+    // returns the highest pair of a set of sorted cards
+    private Rank getPairRank(Card[] c) {
+        return getPairRank(c, null);
+    }
+
+    // returns the highest pair of a set of sorted cards (excluding the rank passed as the second parameter)
+    private Rank getPairRank(Card[] c, Rank excluding) {
+        for (Card card1 : c) {
+            for (Card card2 : c) {
+                if (card1 != card2 &&
+                        card1.rank == card2.rank &&
+                        card1.rank != excluding) {
+                    return card1.rank;
+                }
+            }
+        }
+        return null;
     }
 
     @Override

@@ -1,7 +1,5 @@
 package Poker;
 
-import java.util.Comparator;
-
 /**
  * Created by Denk on 21/02/17.
  */

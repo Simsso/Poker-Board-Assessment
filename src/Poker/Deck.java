@@ -8,7 +8,7 @@ import java.util.Random;
  * Created by Denk on 21/02/17.
  */
 public class Deck {
-    public final Card[] cards;
+    private final Card[] cards;
     private ArrayList<Card> availableCards;
     private Random random = new Random();
 
