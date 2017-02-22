@@ -1,8 +1,5 @@
 package Poker;
 
-/**
- * Created by Denk on 21/02/17.
- */
 public class Card implements Comparable<Card> {
     public final Rank rank;
     public final Suit suit;

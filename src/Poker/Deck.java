@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
-/**
- * Created by Denk on 21/02/17.
- */
 public class Deck {
     private final Card[] cards;
     private ArrayList<Card> availableCards;

@@ -1,8 +1,5 @@
 package Poker;
 
-/**
- * Created by Denk on 21/02/17.
- */
 public enum Rank implements Comparable<Rank> {
     TWO('2'),
     THREE('3'),

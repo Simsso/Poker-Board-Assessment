@@ -3,9 +3,6 @@ package Poker;
 import java.util.Arrays;
 import java.util.Collections;
 
-/**
- * Created by Denk on 21/02/17.
- */
 class CardAssessment {
     static HandName getRank(Card[] c) {
         validateParameter(c);

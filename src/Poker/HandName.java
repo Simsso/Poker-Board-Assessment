@@ -1,8 +1,5 @@
 package Poker;
 
-/**
- * Created by Denk on 21/02/17.
- */
 public enum HandName {
     // smaller ordinal represents a better hand
     ROYAL_FLUSH("Royal Flush"),

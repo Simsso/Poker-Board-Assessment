@@ -1,8 +1,5 @@
 package PokerBoardAssessment;
 
-/**
- * Created by Denk on 22/02/17.
- */
 public class Outcome {
     private long win, split, loss;
 
@@ -24,10 +21,14 @@ public class Outcome {
     }
 
     public double getWinRate() {
-        return (double)win / (win + split + loss);
+        return (double)win / getCount();
     }
 
     public double getSplitRate() {
-        return (double)split / (win + split + loss);
+        return (double)split / getCount();
+    }
+
+    public long getCount() {
+        return win + split + loss;
     }
 }

@@ -1,8 +1,5 @@
 package Poker;
 
-/**
- * Created by Denk on 21/02/17.
- */
 class Util {
     static int binaryDigitSum(int x) {
         int counter = 0,

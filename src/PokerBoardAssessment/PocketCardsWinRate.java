@@ -2,10 +2,24 @@ package PokerBoardAssessment;
 
 import Poker.*;
 
-/**
- * Created by Denk on 22/02/17.
- */
 class PocketCardsWinRate {
+    static void analyseAllWinRates(int iterations, int opponents) {
+        for (Rank rank1 : Rank.values()) {
+            for (Rank rank2 : Rank.values()) {
+                for (Suit suit1 : Suit.values()) {
+                    for (Suit suit2 : Suit.values()) {
+                        if (rank1 == rank2 && suit1 == suit2) {
+                            continue; // not possible
+                        }
+
+                        Outcome outcome = winRateFor(rank1, suit1, rank2, suit2, iterations, opponents);
+                        logWithTabs(rank1, rank2, (suit1 == suit2) ? outcome : null, (suit1 == suit2) ? null : outcome);
+                    }
+                }
+            }
+        }
+    }
+
     static void analyseWinRates(int iterations, int opponents) {
         for (Rank rank1 : Rank.values()) {
             for (Rank rank2 : Rank.values()) {
@@ -30,7 +44,7 @@ class PocketCardsWinRate {
 
     private static Outcome winRateFor(Rank rank1, Suit suit1, Rank rank2, Suit suit2, int iterations, int opponents) {
         if (opponents < 1) {
-            return new Outcome();
+            return null;
         }
 
         Card[] tmp7Cards = new Card[7],
@@ -52,25 +66,41 @@ class PocketCardsWinRate {
 
             Hand playerHand = Poker.getBestHandFromCards(tmp7Cards);
 
-            boolean wonSoFar = false;
+            boolean bestSoFar = false, loss = false, splitSoFar = false;
             for (int j = 0; j < opponents; j++) {
                 joinCommunityAndPocketCards(tmp7Cards, communityCards, deck.getNextCard(), deck.getNextCard());
                 opponentHands[j] = Poker.getBestHandFromCards(tmp7Cards);
                 int compare = opponentHands[j].compareTo(playerHand);
+
                 if (compare > 0) {
                     // opponent is better
+                    loss = true;
                     outcome.addLoss();
-                    break;
+                    break; // break for performance reason: no further comparison necessary
                 }
-                if (compare < 0) { // won at least against one opponent
-                    wonSoFar = true;
+
+                if (!splitSoFar && compare < 0) {
+                    // won at least against one opponent
+                    // if there has already been a split with another opponent (splitSoFar) the superiority does not matter
+                    bestSoFar = true;
+                }
+
+                if (compare == 0) {
+                    // split pot against that opponent
+                    splitSoFar = true;
+
+                    // previous wins do not matter anymore (pot will be either split or lost)
+                    bestSoFar = false;
                 }
             }
 
-            if (wonSoFar) {
+            // no split, at least one win, and no loss
+            if (!splitSoFar && bestSoFar && !loss) {
                 outcome.addWin();
             }
-            else {
+
+            // one split, no win, and no loss
+            if (splitSoFar && !bestSoFar && !loss) {
                 outcome.addSplit();
             }
         }
@@ -95,6 +125,11 @@ class PocketCardsWinRate {
     }
 
     private static void logWithTabs(Rank rank1, Rank rank2, Outcome suited, Outcome offSuit) {
-        System.out.println(rank1 + " " + rank2 + "\t"  + offSuit.getWinRate() + "\t" + offSuit.getSplitRate() + "\t"  + ((suited != null) ? suited.getWinRate() + "\t" + suited.getSplitRate() : ""));
+        if (offSuit != null) {
+            System.out.println(rank1 + " " + rank2 + " (off-suit)\t" + offSuit.getWinRate() + "\t" + offSuit.getSplitRate());
+        }
+        if (suited != null) {
+            System.out.println(rank1 + " " + rank2 + " (suited)\t" + suited.getWinRate() + "\t" + suited.getSplitRate());
+        }
     }
 }

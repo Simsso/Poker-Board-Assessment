@@ -1,8 +1,5 @@
 package Poker;
 
-/**
- * Created by Denk on 21/02/17.
- */
 public class Hand implements Comparable<Hand> {
     public final HandName name;
     public final Card[] cards;
@@ -140,7 +137,7 @@ public class Hand implements Comparable<Hand> {
                 }
             }
         }
-        return null;
+        return null; // no pair found
     }
 
     @Override

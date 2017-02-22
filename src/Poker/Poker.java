@@ -3,9 +3,6 @@ package Poker;
 import java.util.Arrays;
 import java.util.Collections;
 
-/**
- * Created by Denk on 21/02/17.
- */
 public class Poker {
     private static int HAND_SIZE = 5;
 
