@@ -10,6 +10,10 @@ public class PokerBoardAssessment {
 
 
     public static void main(String[] args) {
+        PocketCardsWinRate.analyseWinRates(15000, 1);
+    }
+
+    private static void pokerHandProbabilities() {
         int[] handNameOccurrences = new int[HandName.values().length];
         for (int i = 0; i < ITERATIONS; i++) {
             Deck deck = new Deck();
