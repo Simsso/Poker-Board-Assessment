@@ -1,11 +1,11 @@
-package com.timodenk.poker.pokerboardassessment;
+package com.timodenk.poker.boardassessment;
 
 import com.timodenk.poker.*;
 
 public class PokerBoardAssessment {
     public static void main(String[] args) {
         //PocketCardsWinRate.analyseAllWinRates(5000, 4);
-        PocketCardsWinRate.analyseWinRates(100000, 4);
+        PocketCardsWinRate.analyseWinRates(100000, 1);
     }
 
     private static void pokerHandProbabilities(int iterations) {

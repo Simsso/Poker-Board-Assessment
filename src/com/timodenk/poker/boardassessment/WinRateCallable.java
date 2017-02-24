@@ -1,19 +1,16 @@
-package com.timodenk.poker.pokerboardassessment;
+package com.timodenk.poker.boardassessment;
 
 import com.timodenk.poker.*;
 
 import java.util.concurrent.Callable;
 
-/**
- * Created by Denk on 24/02/17.
- */
 class WinRateCallable implements Callable<Outcome> {
     private final Rank rank1, rank2;
     private final Suit suit1, suit2;
 
     private final int iterations, opponents;
 
-    public WinRateCallable(final Rank rank1, final Suit suit1, final Rank rank2, final Suit suit2, final int iterations, final int opponents) {
+    WinRateCallable(final Rank rank1, final Suit suit1, final Rank rank2, final Suit suit2, final int iterations, final int opponents) {
         this.rank1 = rank1;
         this.rank2 = rank2;
         this.suit1 = suit1;
@@ -86,6 +83,16 @@ class WinRateCallable implements Callable<Outcome> {
         for (int i = 0; i < 5; i++) {
             out[i] = communityCards[i];
         }
+        out[5] = playerCard1;
+        out[6] = playerCard2;
+    }
+
+    private static void joinCommunityAndPocketCards(Card[] out, Card[] flop, Card turn, Card river, Card playerCard1, Card playerCard2) {
+        for (int i = 0; i < 3; i++) {
+            out[i] = flop[i];
+        }
+        out[3] = turn;
+        out[4] = river;
         out[5] = playerCard1;
         out[6] = playerCard2;
     }

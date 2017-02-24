@@ -1,4 +1,4 @@
-package com.timodenk.poker.pokerboardassessment;
+package com.timodenk.poker.boardassessment;
 
 public class Outcome {
     private long win, split, loss;

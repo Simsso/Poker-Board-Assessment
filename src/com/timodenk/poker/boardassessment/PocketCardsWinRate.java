@@ -1,4 +1,4 @@
-package com.timodenk.poker.pokerboardassessment;
+package com.timodenk.poker.boardassessment;
 
 import com.timodenk.poker.*;
 
@@ -34,7 +34,7 @@ class PocketCardsWinRate {
                     continue; // combination occurs the other way around
                 }
 
-                long stop, start = System.nanoTime();
+                long start = System.nanoTime(); // performance
 
                 Suit suit1 = Suit.CLUBS;
                 Suit suit2 = Suit.SPADES;
@@ -46,9 +46,8 @@ class PocketCardsWinRate {
                     suited = winRateFor(rank1, suit1, rank2, suit2, iterations, opponents);
                 }
 
-                stop = System.nanoTime();
-
-                System.out.printf("%8.2f µs\n", (stop - start) / 10e3 / (double)(offSuit.getCount() + ((suited == null) ? 0 : suited.getCount())));
+                // performance measurements
+                System.out.printf("%8.2f µs\n", (System.nanoTime() - start) / 10e3 / (double)(offSuit.getCount() + ((suited == null) ? 0 : suited.getCount())));
 
                 logWithTabs(rank1, rank2, suited, offSuit);
             }
@@ -62,7 +61,17 @@ class PocketCardsWinRate {
 
         Outcome outcome = new Outcome();
 
-        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
+        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT, new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r);
+
+                // these threads may not prevent the JVM from exiting
+                t.setDaemon(true);
+                return t;
+            }
+        });
+
 
         Set<Callable<Outcome>> callables = new HashSet<Callable<Outcome>>();
 
@@ -87,7 +96,6 @@ class PocketCardsWinRate {
         }
         finally {
             executorService.shutdown();
-            System.out.println("Shutdown");
         }
         return outcome;
     }
