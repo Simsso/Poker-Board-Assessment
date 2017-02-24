@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 
-class PocketCardsWinRate {
-    private static final int THREAD_COUNT = 8;
+class WinRate {
+    private static final int THREAD_COUNT = 4;
 
-    static void analyseAllWinRates(int iterations, int opponents) {
+    static void analyseAllPocketCardCombinations(int iterations, int opponents) {
         for (Rank rank1 : Rank.values()) {
             for (Rank rank2 : Rank.values()) {
                 for (Suit suit1 : Suit.values()) {
@@ -18,8 +18,13 @@ class PocketCardsWinRate {
                         if (rank1 == rank2 && suit1 == suit2) {
                             continue; // not possible
                         }
-
-                        Outcome outcome = winRateFor(rank1, suit1, rank2, suit2, iterations, opponents);
+                        Deck deck = new Deck();
+                        Outcome outcome = null;
+                        try {
+                            outcome = winRateFor(deck, deck.takeCard(rank1, suit1), deck.takeCard(rank2, suit2), iterations, opponents);
+                        } catch (DeckStateException e) {
+                            e.printStackTrace();
+                        }
                         logWithTabs(rank1, rank2, (suit1 == suit2) ? outcome : null, (suit1 == suit2) ? null : outcome);
                     }
                 }
@@ -34,27 +39,42 @@ class PocketCardsWinRate {
                     continue; // combination occurs the other way around
                 }
 
-                long start = System.nanoTime(); // performance
-
+                // representative for off-suit combinations
                 Suit suit1 = Suit.CLUBS;
                 Suit suit2 = Suit.SPADES;
-                Outcome suited = null,
-                        offSuit = winRateFor(rank1, suit1, rank2, suit2, iterations, opponents);
 
-                if (rank1 != rank2) {
-                    suit2 = Suit.CLUBS;
-                    suited = winRateFor(rank1, suit1, rank2, suit2, iterations, opponents);
+                Deck deck1 = new Deck();
+                Outcome suited = null;
+                Outcome offSuit = null;
+                try {
+                    offSuit = winRateFor(deck1, deck1.takeCard(rank1, suit1), deck1.takeCard(rank2, suit2), iterations, opponents);
+                } catch (DeckStateException e) {
+                    e.printStackTrace();
                 }
 
-                // performance measurements
-                System.out.printf("%8.2f µs\n", (System.nanoTime() - start) / 10e3 / (double)(offSuit.getCount() + ((suited == null) ? 0 : suited.getCount())));
+                if (rank1 != rank2) {
+                    // suited combinations possible
+                    suit2 = suit1;
+                    Deck deck2 = new Deck();
+                    try {
+                        suited = winRateFor(deck2, deck2.takeCard(rank1, suit1), deck2.takeCard(rank2, suit2), iterations, opponents);
+                    } catch (DeckStateException e) {
+                        e.printStackTrace();
+                    }
+                }
 
                 logWithTabs(rank1, rank2, suited, offSuit);
             }
         }
     }
 
-    private static Outcome winRateFor(final Rank rank1, final Suit suit1, final Rank rank2, final Suit suit2, final int iterations, final int opponents) {
+    static Outcome winRateFor(final Deck deck, final Card pocketCard1, final Card pocketCard2, final int iterations, final int opponents) {
+        return winRateFor(deck, pocketCard1, pocketCard2, null, iterations, opponents);
+    }
+
+    static Outcome winRateFor(final Deck deck, final Card pocketCard1, final Card pocketCard2, final Card[] communityCards, final int iterations, final int opponents) {
+        long start = System.nanoTime(); // performance
+
         if (opponents < 1) {
             return null;
         }
@@ -80,7 +100,33 @@ class PocketCardsWinRate {
             if (threadId == THREAD_COUNT - 1) {
                 currentThreadIterations += iterations % THREAD_COUNT;
             }
-            callables.add(new WinRateCallable(rank1, suit1, rank2, suit2, currentThreadIterations, opponents));
+
+            Deck threadDeck = deck.clone();
+            Card[] threadCommunityCards = new Card[5];
+
+            // copy community cards to threadCommunityCards
+            for (int i = 0; i < 5; i++) {
+                if (communityCards == null || communityCards.length < i + 1 || communityCards[i] == null) {
+                    threadCommunityCards[i] = null;
+                }
+                else {
+                    try {
+                        threadCommunityCards[i] = threadDeck.getCardLike(communityCards[i]);
+                    } catch (DeckStateException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            try {
+                callables.add(new WinRateCallable(
+                        threadDeck, // all threads have different deck objects with the same properties
+                        threadDeck.getCardLike(pocketCard1),
+                        threadDeck.getCardLike(pocketCard2),
+                        threadCommunityCards,
+                        currentThreadIterations, opponents));
+            } catch (DeckStateException e) {
+                e.printStackTrace();
+            }
         }
 
         try {
@@ -97,6 +143,10 @@ class PocketCardsWinRate {
         finally {
             executorService.shutdown();
         }
+
+        // performance measurements
+        System.out.printf("%8.2f µs (%d iterations)\n", (System.nanoTime() - start) / 10e3 / (double)(outcome.getCount()), outcome.getCount());
+
         return outcome;
     }
 

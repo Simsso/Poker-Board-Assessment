@@ -5,34 +5,43 @@ import com.timodenk.poker.*;
 import java.util.concurrent.Callable;
 
 class WinRateCallable implements Callable<Outcome> {
-    private final Rank rank1, rank2;
-    private final Suit suit1, suit2;
+    private final Card pocketCard1, pocketCard2;
+    private final Deck deck;
+    private final Card[] communityCards = new Card[5],
+            communityCardsInitial; // for later usage it is necessary to know which community cards were set / known
 
     private final int iterations, opponents;
 
-    WinRateCallable(final Rank rank1, final Suit suit1, final Rank rank2, final Suit suit2, final int iterations, final int opponents) {
-        this.rank1 = rank1;
-        this.rank2 = rank2;
-        this.suit1 = suit1;
-        this.suit2 = suit2;
+    // only pocket cards played information
+    WinRateCallable(final Deck deck, final Card pocketCard1, final Card pocketCard2, final int iterations, final int opponents) {
+        this(deck, pocketCard1, pocketCard2, new Card[5], iterations, opponents);
+    }
+
+    // more card information available
+    WinRateCallable(final Deck deck, final Card pocketCard1, final Card pocketCard2, final Card[] communityCards, final int iterations, final int opponents) {
+        this.deck = deck;
+        this.pocketCard1 = pocketCard1;
+        this.pocketCard2 = pocketCard2;
+        this.communityCardsInitial = communityCards;
+
         this.iterations = iterations;
         this.opponents = opponents;
     }
 
     @Override
     public Outcome call() throws Exception {
-        Card[] tmp7Cards = new Card[7],
-                communityCards;
+        Card[] tmp7Cards = new Card[7];
 
         Hand[] opponentHands = new Hand[opponents];
 
         Outcome outcome = new Outcome();
         for (int i = 0; i < iterations; i++) {
-            Deck deck = new Deck();
-            Card card1 = deck.getCard(rank1, suit1),
-                    card2 = deck.getCard(rank2, suit2);
+            deck.shuffle();
+            Card card1 = pocketCard1,
+                    card2 = pocketCard2;
+            deck.takeCards(card1, card2);
 
-            communityCards = deck.getNCards(5);
+            fillCommunityCards();
 
             joinCommunityAndPocketCards(tmp7Cards, communityCards, card1, card2);
 
@@ -40,14 +49,24 @@ class WinRateCallable implements Callable<Outcome> {
 
             boolean bestSoFar = false, loss = false, splitSoFar = false;
             for (int j = 0; j < opponents; j++) {
-                joinCommunityAndPocketCards(tmp7Cards, communityCards, deck.getNextCard(), deck.getNextCard());
-                opponentHands[j] = Poker.getBestHandFromCards(tmp7Cards);
+                try {
+                    joinCommunityAndPocketCards(tmp7Cards, communityCards, deck.getNextCard(), deck.getNextCard());
+                }
+                catch(DeckStateException e) {
+                    throw new Exception("Can not take new cards. Probably too many opponents (" + opponents + ").");
+                }
+                try {
+                    opponentHands[j] = Poker.getBestHandFromCards(tmp7Cards);
+                }
+                catch (NullPointerException e) {
+                    System.out.println("Exception");
+                }
                 int compare = opponentHands[j].compareTo(playerHand);
 
                 if (compare > 0) {
                     // opponent is better
                     loss = true;
-                    outcome.addLoss();
+                    outcome.addLoss(playerHand);
                     break; // break for performance reason: no further comparison necessary
                 }
 
@@ -68,12 +87,12 @@ class WinRateCallable implements Callable<Outcome> {
 
             // no split, at least one win, and no loss
             if (!splitSoFar && bestSoFar && !loss) {
-                outcome.addWin();
+                outcome.addWin(playerHand);
             }
 
             // one split, no win, and no loss
             if (splitSoFar && !bestSoFar && !loss) {
-                outcome.addSplit();
+                outcome.addSplit(playerHand);
             }
         }
         return outcome;
@@ -87,13 +106,15 @@ class WinRateCallable implements Callable<Outcome> {
         out[6] = playerCard2;
     }
 
-    private static void joinCommunityAndPocketCards(Card[] out, Card[] flop, Card turn, Card river, Card playerCard1, Card playerCard2) {
-        for (int i = 0; i < 3; i++) {
-            out[i] = flop[i];
+    private void fillCommunityCards() throws DeckStateException {
+        deck.takeCards(communityCardsInitial); // community cards can not be taken by other players
+        for (int i = 0; i < 5; i++) {
+            if (!(i < communityCardsInitial.length) || communityCardsInitial[i] == null) {
+                this.communityCards[i] = deck.getNextCard();
+            }
+            else {
+                this.communityCards[i] = communityCardsInitial[i];
+            }
         }
-        out[3] = turn;
-        out[4] = river;
-        out[5] = playerCard1;
-        out[6] = playerCard2;
     }
 }
