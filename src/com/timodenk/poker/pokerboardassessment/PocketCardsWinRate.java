@@ -1,8 +1,15 @@
-package PokerBoardAssessment;
+package com.timodenk.poker.pokerboardassessment;
 
-import Poker.*;
+import com.timodenk.poker.*;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.*;
 
 class PocketCardsWinRate {
+    private static final int THREAD_COUNT = 8;
+
     static void analyseAllWinRates(int iterations, int opponents) {
         for (Rank rank1 : Rank.values()) {
             for (Rank rank2 : Rank.values()) {
@@ -27,6 +34,8 @@ class PocketCardsWinRate {
                     continue; // combination occurs the other way around
                 }
 
+                long stop, start = System.nanoTime();
+
                 Suit suit1 = Suit.CLUBS;
                 Suit suit2 = Suit.SPADES;
                 Outcome suited = null,
@@ -37,82 +46,50 @@ class PocketCardsWinRate {
                     suited = winRateFor(rank1, suit1, rank2, suit2, iterations, opponents);
                 }
 
+                stop = System.nanoTime();
+
+                System.out.printf("%8.2f µs\n", (stop - start) / 10e3 / (double)(offSuit.getCount() + ((suited == null) ? 0 : suited.getCount())));
+
                 logWithTabs(rank1, rank2, suited, offSuit);
             }
         }
     }
 
-    private static Outcome winRateFor(Rank rank1, Suit suit1, Rank rank2, Suit suit2, int iterations, int opponents) {
+    private static Outcome winRateFor(final Rank rank1, final Suit suit1, final Rank rank2, final Suit suit2, final int iterations, final int opponents) {
         if (opponents < 1) {
             return null;
         }
 
-        Card[] tmp7Cards = new Card[7],
-                communityCards,
-                opponentCards = new Card[opponents * 2]; // two cards for each opponent
-
-        Hand[] opponentHands = new Hand[opponents];
-
         Outcome outcome = new Outcome();
 
-        for (int i = 0; i < iterations; i++) {
-            Deck deck = new Deck();
-            Card card1 = deck.getCard(rank1, suit1),
-                    card2 = deck.getCard(rank2, suit2);
+        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
 
-            communityCards = deck.getNCards(5);
+        Set<Callable<Outcome>> callables = new HashSet<Callable<Outcome>>();
 
-            joinCommunityAndPocketCards(tmp7Cards, communityCards, card1, card2);
-
-            Hand playerHand = Poker.getBestHandFromCards(tmp7Cards);
-
-            boolean bestSoFar = false, loss = false, splitSoFar = false;
-            for (int j = 0; j < opponents; j++) {
-                joinCommunityAndPocketCards(tmp7Cards, communityCards, deck.getNextCard(), deck.getNextCard());
-                opponentHands[j] = Poker.getBestHandFromCards(tmp7Cards);
-                int compare = opponentHands[j].compareTo(playerHand);
-
-                if (compare > 0) {
-                    // opponent is better
-                    loss = true;
-                    outcome.addLoss();
-                    break; // break for performance reason: no further comparison necessary
-                }
-
-                if (!splitSoFar && compare < 0) {
-                    // won at least against one opponent
-                    // if there has already been a split with another opponent (splitSoFar) the superiority does not matter
-                    bestSoFar = true;
-                }
-
-                if (compare == 0) {
-                    // split pot against that opponent
-                    splitSoFar = true;
-
-                    // previous wins do not matter anymore (pot will be either split or lost)
-                    bestSoFar = false;
-                }
+        for (int threadId = 0; threadId < THREAD_COUNT; threadId++) {
+            int currentThreadIterations = iterations / THREAD_COUNT;
+            if (threadId == THREAD_COUNT - 1) {
+                currentThreadIterations += iterations % THREAD_COUNT;
             }
+            callables.add(new WinRateCallable(rank1, suit1, rank2, suit2, currentThreadIterations, opponents));
+        }
 
-            // no split, at least one win, and no loss
-            if (!splitSoFar && bestSoFar && !loss) {
-                outcome.addWin();
-            }
+        try {
+            List<Future<Outcome>> futures = executorService.invokeAll(callables);
 
-            // one split, no win, and no loss
-            if (splitSoFar && !bestSoFar && !loss) {
-                outcome.addSplit();
+            for (Future<Outcome> threadOutcome  : futures) {
+                outcome.merge(threadOutcome.get());
             }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+        finally {
+            executorService.shutdown();
+            System.out.println("Shutdown");
         }
         return outcome;
-    }
-
-    private static void joinCommunityAndPocketCards(Card[] out, Card[] communityCards, Card playerCard1, Card playerCard2) {
-        for (int i = 0; i < 5; i++) {
-            out[i] = communityCards[i];
-        }
-        out[5] = playerCard1;
-        out[6] = playerCard2;
     }
 
     private static void log(Rank rank1, Rank rank2, Outcome suited, Outcome offSuit) {

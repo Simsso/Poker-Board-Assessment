@@ -1,4 +1,4 @@
-package PokerBoardAssessment;
+package com.timodenk.poker.pokerboardassessment;
 
 public class Outcome {
     private long win, split, loss;
@@ -30,5 +30,11 @@ public class Outcome {
 
     public long getCount() {
         return win + split + loss;
+    }
+
+    public void merge(Outcome toMerge) {
+        this.win += toMerge.win;
+        this.split += toMerge.split;
+        this.loss += toMerge.loss;
     }
 }

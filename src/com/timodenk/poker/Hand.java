@@ -1,4 +1,4 @@
-package Poker;
+package com.timodenk.poker;
 
 public class Hand implements Comparable<Hand> {
     public final HandName name;

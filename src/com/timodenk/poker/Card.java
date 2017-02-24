@@ -1,4 +1,4 @@
-package Poker;
+package com.timodenk.poker;
 
 public class Card implements Comparable<Card> {
     public final Rank rank;

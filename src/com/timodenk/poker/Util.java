@@ -1,4 +1,4 @@
-package Poker;
+package com.timodenk.poker;
 
 class Util {
     static int binaryDigitSum(int x) {

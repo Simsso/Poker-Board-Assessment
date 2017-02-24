@@ -1,4 +1,4 @@
-package Poker;
+package com.timodenk.poker;
 
 public enum Suit {
     HEARTS('♥'),

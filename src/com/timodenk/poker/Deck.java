@@ -1,4 +1,4 @@
-package Poker;
+package com.timodenk.poker;
 
 import java.util.ArrayList;
 import java.util.Arrays;

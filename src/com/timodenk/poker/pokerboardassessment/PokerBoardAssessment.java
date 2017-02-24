@@ -1,6 +1,6 @@
-package PokerBoardAssessment;
+package com.timodenk.poker.pokerboardassessment;
 
-import Poker.*;
+import com.timodenk.poker.*;
 
 public class PokerBoardAssessment {
     public static void main(String[] args) {

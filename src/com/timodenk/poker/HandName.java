@@ -1,4 +1,4 @@
-package Poker;
+package com.timodenk.poker;
 
 public enum HandName {
     // smaller ordinal represents a better hand
