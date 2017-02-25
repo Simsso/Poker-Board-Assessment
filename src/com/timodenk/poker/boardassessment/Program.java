@@ -4,58 +4,42 @@ import com.timodenk.poker.*;
 
 public class Program {
     public static void main(String[] args) {
-        //WinRate.analyseWinRates(5000, 1);
-        //WinRate.analyseWinRates(100000, 1);
-
         Deck deck = new Deck();
-
         try {
-            System.out.println(WinRate.winRateFor(
-                    deck,
-                    // pocket cards
-                    deck.takeCard(Rank.SIX, Suit.DIAMONDS),
-                    deck.takeCard(Rank.EIGHT, Suit.HEARTS),
-                    new Card[] { // community cards
-                            deck.takeCard(Rank.THREE, Suit.CLUBS),
-                            deck.takeCard(Rank.FOUR, Suit.SPADES),
-                            deck.takeCard(Rank.FIVE, Suit.HEARTS),
-                    },
-                    500000, // iterations
-                    2)); // opponents
-        } catch (DeckStateException e) {
-            e.printStackTrace();
-        }
-
-        deck.shuffle();
-
-        System.out.println();
-
-        try {
-            System.out.println(WinRate.winRateFor(
-                    deck,
-                    deck.takeCard(Rank.NINE, Suit.CLUBS),
-                    deck.takeCard(Rank.EIGHT, Suit.CLUBS),
-                    new Card[] {
+            PocketCards[] pocketCards = new PocketCards[] {
+                    new PocketCards(
+                            deck.takeCard(Rank.ACE, Suit.CLUBS),
+                            deck.takeCard(Rank.FIVE, Suit.CLUBS)
+                    ),
+                    new PocketCards(
                             deck.takeCard(Rank.JACK, Suit.CLUBS),
-                            deck.takeCard(Rank.TEN, Suit.CLUBS)
-                    },
-                    100000,
-                    8).toTable());
-        } catch (DeckStateException e) {
-            e.printStackTrace();
-        }
+                            deck.takeCard(Rank.TEN, Suit.DIAMONDS)
+                    )/*,
+                    new PocketCards(
+                            deck.takeCard(Rank.ACE, Suit.SPADES),
+                            deck.takeCard(Rank.TWO, Suit.HEARTS)
+                    )*/
+            };
 
-        deck.shuffle();
-
-        System.out.println();
-
-        try {
-            System.out.println(WinRate.winRateFor(
+            Outcome[] playerOutcomes = WinRate.winRateFor(
                     deck,
-                    deck.takeCard(Rank.SEVEN, Suit.CLUBS),
-                    deck.takeCard(Rank.TWO, Suit.CLUBS),
-                    100000,
-                    8).toTable());
+                    pocketCards,
+                    new Card[] { // community cards
+                            deck.takeCard(Rank.EIGHT, Suit.DIAMONDS),
+                            deck.takeCard(Rank.SEVEN, Suit.CLUBS),
+                            deck.takeCard(Rank.TWO, Suit.CLUBS),
+                            deck.takeCard(Rank.ACE, Suit.DIAMONDS)
+
+                    },
+                    new Card[] { // folded / known cards
+                            deck.takeCard(Rank.ACE, Suit.SPADES),
+                            deck.takeCard(Rank.TWO, Suit.HEARTS)
+                    },
+                    50000);
+
+            for (int i = 0; i < playerOutcomes.length; i++) {
+                System.out.println(pocketCards[i] + " " + playerOutcomes[i].getWinRate());
+            }
         } catch (DeckStateException e) {
             e.printStackTrace();
         }

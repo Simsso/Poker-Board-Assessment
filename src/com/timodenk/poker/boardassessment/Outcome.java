@@ -83,8 +83,24 @@ public class Outcome {
         String out = this.toString();
         for (int i = 0; i < HandName.values().length; i++) {
             HandName hand = HandName.values()[i];
-            out += "\n" + String.format("%6f", getHandRate(hand)) + " \t" + hand.toString();
+            out += "\n" + String.format("%4f", getHandRate(hand)) + " \t" + hand.toString();
         }
         return out;
+    }
+
+    public static long getCount(Outcome[] outcomes) {
+        long count = 0;
+        for (Outcome outcome : outcomes) {
+            count += outcome.getCount();
+        }
+        return count;
+    }
+
+    public static long getCount(Outcome[] outcomes, HandName handName) {
+        long count = 0;
+        for (Outcome outcome : outcomes) {
+            count += outcome.getCount(handName);
+        }
+        return count;
     }
 }

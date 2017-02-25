@@ -21,7 +21,7 @@ class WinRate {
                         Deck deck = new Deck();
                         Outcome outcome = null;
                         try {
-                            outcome = winRateFor(deck, deck.takeCard(rank1, suit1), deck.takeCard(rank2, suit2), iterations, opponents);
+                            outcome = winRateFor(deck, onePlayerPocketCards(new PocketCards(deck.takeCard(rank1, suit1), deck.takeCard(rank2, suit2)), opponents), iterations)[0];
                         } catch (DeckStateException e) {
                             e.printStackTrace();
                         }
@@ -47,7 +47,14 @@ class WinRate {
                 Outcome suited = null;
                 Outcome offSuit = null;
                 try {
-                    offSuit = winRateFor(deck1, deck1.takeCard(rank1, suit1), deck1.takeCard(rank2, suit2), iterations, opponents);
+                    offSuit = winRateFor(
+                            deck1,
+                            onePlayerPocketCards(
+                                    new PocketCards(
+                                            deck1.takeCard(rank1, suit1),
+                                            deck1.takeCard(rank2, suit2)),
+                                    opponents),
+                            iterations)[0];
                 } catch (DeckStateException e) {
                     e.printStackTrace();
                 }
@@ -57,7 +64,14 @@ class WinRate {
                     suit2 = suit1;
                     Deck deck2 = new Deck();
                     try {
-                        suited = winRateFor(deck2, deck2.takeCard(rank1, suit1), deck2.takeCard(rank2, suit2), iterations, opponents);
+                        suited = winRateFor(
+                                deck2,
+                                onePlayerPocketCards(
+                                        new PocketCards(
+                                                deck2.takeCard(rank1, suit1),
+                                                deck2.takeCard(rank2, suit2)),
+                                        opponents),
+                                iterations)[0];
                     } catch (DeckStateException e) {
                         e.printStackTrace();
                     }
@@ -68,18 +82,21 @@ class WinRate {
         }
     }
 
-    static Outcome winRateFor(final Deck deck, final Card pocketCard1, final Card pocketCard2, final int iterations, final int opponents) {
-        return winRateFor(deck, pocketCard1, pocketCard2, null, iterations, opponents);
+    static Outcome[] winRateFor(final Deck deck, final PocketCards[] pocketCards, final int iterations) {
+        return winRateFor(deck, pocketCards, null, new Card[0], iterations);
     }
 
-    static Outcome winRateFor(final Deck deck, final Card pocketCard1, final Card pocketCard2, final Card[] communityCards, final int iterations, final int opponents) {
+    static Outcome[] winRateFor(final Deck deck, final PocketCards[] pocketCards, final Card[] communityCards, final Card[] takenCards, final int iterations) {
         long start = System.nanoTime(); // performance
 
-        if (opponents < 1) {
+        int playerCount = pocketCards.length;
+
+        if (pocketCards.length < 1) {
             return null;
         }
 
-        Outcome outcome = new Outcome();
+        Outcome outcome[] = new Outcome[playerCount]; // declare and initialize (took a while to find that NullPointerException...)
+        for (int i = 0; i < playerCount; i++) { outcome[i] = new Outcome(); }
 
         ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT, new ThreadFactory() {
             @Override
@@ -93,7 +110,7 @@ class WinRate {
         });
 
 
-        Set<Callable<Outcome>> callables = new HashSet<Callable<Outcome>>();
+        Set<Callable<Outcome[]>> callables = new HashSet<Callable<Outcome[]>>();
 
         for (int threadId = 0; threadId < THREAD_COUNT; threadId++) {
             int currentThreadIterations = iterations / THREAD_COUNT;
@@ -101,39 +118,65 @@ class WinRate {
                 currentThreadIterations += iterations % THREAD_COUNT;
             }
 
+            // objects for each thread
             Deck threadDeck = deck.clone();
             Card[] threadCommunityCards = new Card[5];
+            Card[] threadTakenCards = new Card[takenCards.length];
+            PocketCards[] threadPocketCards = new PocketCards[playerCount];
 
-            // copy community cards to threadCommunityCards
-            for (int i = 0; i < 5; i++) {
-                if (communityCards == null || communityCards.length < i + 1 || communityCards[i] == null) {
-                    threadCommunityCards[i] = null;
-                }
-                else {
-                    try {
+            try {
+                // copy community cards to threadCommunityCards
+                for (int i = 0; i < 5; i++) {
+                    if (communityCards == null || communityCards.length < i + 1 || communityCards[i] == null) {
+                        threadCommunityCards[i] = null;
+                    }
+                    else {
                         threadCommunityCards[i] = threadDeck.getCardLike(communityCards[i]);
-                    } catch (DeckStateException e) {
-                        e.printStackTrace();
                     }
                 }
-            }
-            try {
-                callables.add(new WinRateCallable(
-                        threadDeck, // all threads have different deck objects with the same properties
-                        threadDeck.getCardLike(pocketCard1),
-                        threadDeck.getCardLike(pocketCard2),
-                        threadCommunityCards,
-                        currentThreadIterations, opponents));
+
+                // copy taken cards to thread array
+                for (int i = 0; i < takenCards.length; i++) {
+                    threadTakenCards[i] = threadDeck.getCardLike(takenCards[i]);
+                }
+
+                // copy pocket cards to threadPocketCards (null values possible for not determined cards)
+                for (int i = 0; i < playerCount; i++) {
+                    if (pocketCards[i] == null) {
+                        threadPocketCards[i] = new PocketCards(null, null);
+                    }
+                    else if (pocketCards[i].card1 != null && pocketCards[i].card2 == null) {
+                        threadPocketCards[i] = new PocketCards(threadDeck.getCardLike(pocketCards[i].card1), null);
+                    }
+                    else if (pocketCards[i].card1 == null && pocketCards[i].card2 != null) {
+                        threadPocketCards[i] = new PocketCards(null, threadDeck.getCardLike(pocketCards[i].card2));
+                    }
+                    else {
+                        threadPocketCards[i] = new PocketCards(
+                                threadDeck.getCardLike(pocketCards[i].card1),
+                                threadDeck.getCardLike(pocketCards[i].card2));
+                    }
+                }
             } catch (DeckStateException e) {
                 e.printStackTrace();
             }
+
+            callables.add(new WinRateCallable(
+                    threadDeck, // all threads have different deck objects with the same properties
+                    threadPocketCards,
+                    threadCommunityCards,
+                    threadTakenCards,
+                    currentThreadIterations));
         }
 
         try {
-            List<Future<Outcome>> futures = executorService.invokeAll(callables);
+            List<Future<Outcome[]>> futures = executorService.invokeAll(callables);
 
-            for (Future<Outcome> threadOutcome  : futures) {
-                outcome.merge(threadOutcome.get());
+            for (Future<Outcome[]> threadOutcomeFuture : futures) {
+                Outcome[] threadOutcome = threadOutcomeFuture.get();
+                for (int i = 0; i < playerCount; i++) {
+                    outcome[i].merge(threadOutcome[i]);
+                }
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -145,8 +188,7 @@ class WinRate {
         }
 
         // performance measurements
-        System.out.printf("%8.2f µs (%d iterations)\n", (System.nanoTime() - start) / 10e3 / (double)(outcome.getCount()), outcome.getCount());
-
+        System.out.printf("%9.4f µs (x%d hands)\n", (double)(System.nanoTime() - start) / 1e3 / Outcome.getCount(outcome), Outcome.getCount(outcome));
         return outcome;
     }
 
@@ -166,5 +208,11 @@ class WinRate {
         if (suited != null) {
             System.out.println(rank1 + " " + rank2 + " (suited)\t" + suited.getWinRate() + "\t" + suited.getSplitRate());
         }
+    }
+
+    static PocketCards[] onePlayerPocketCards(PocketCards player, int opponents) {
+        PocketCards[] pocketCards = new PocketCards[opponents + 1];
+        pocketCards[0] = player;
+        return pocketCards;
     }
 }
