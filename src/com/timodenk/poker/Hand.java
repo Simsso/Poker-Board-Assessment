@@ -2,10 +2,19 @@ package com.timodenk.poker;
 
 import java.security.InvalidParameterException;
 
+/**
+ * A poker hand. That is five cards which build a {@link HandName} in combination.
+ * Hands can be compared with one another.
+ */
 public class Hand implements Comparable<Hand> {
-    public final HandName name;
-    public final Card[] cards;
+    public final HandName name; // the hand's name (e.g. Royal Flush)
+    public final Card[] cards; // five cards that the hand consists out of
 
+    /**
+     * Default constructor taking the hand's name and the cards that it consists out of.
+     * @param name The hand's name (e.g. Full House).
+     * @param cards The hand's five cards.
+     */
     Hand(HandName name, Card[] cards) {
         if (cards.length != 5) {
             throw new IllegalArgumentException();
@@ -15,22 +24,28 @@ public class Hand implements Comparable<Hand> {
         this.cards = cards;
     }
 
-    // @return -1 if h2 is better than h1
-    // @return 0 if both hands have the same value
-    // @return 1 if h1 is better than h2
+    /**
+     * Compares this hand with another hand.
+     * Hand comparison is important at showdown.
+     *
+     * The task is especially difficult if both hands have the same hand name.
+     * In this case it has to be determined e.g. who has the higher Straight Flush.
+     *
+     * @param h2 The hand to compare with.
+     * @return -1 if h2 is better than this hand; 0 if both hands have the same value; 1 if this hand is better than h2.
+     */
     @Override
     public int compareTo(Hand h2) {
         Hand h1 = this;
-        if (h1.name.ordinal() < h2.name.ordinal()) {
-            // e.g. h1 has Royal Flush (0) vs. h2 has Straight Flush (1)
-            return 1;
-        }
-        if (h1.name.ordinal() > h2.name.ordinal()) {
-            // e.g. h1 has High Card (15) vs h2 has Four of a Kind (2)
-            return -1;
-        }
 
-        int comparison; // tmp variable for some case branches
+        int comparison; // tmp variable for some case branches and the following if
+
+        comparison = h1.name.compareTo(h2.name) * -1;
+        if (comparison != 0) {
+            // return 1: e.g. h1 has Royal Flush (0) vs. h2 has Straight Flush (1)
+            // return -1: e.g. h1 has High Card (15) vs h2 has Four of a Kind (2)
+            return comparison;
+        }
 
         // both hands have the same hand name (e.g. both have a pair)
         switch (h1.name) {
@@ -112,6 +127,13 @@ public class Hand implements Comparable<Hand> {
         }
     }
 
+    /**
+     * Helper method for {@code compareTo}.
+     * Looks through two sorted arrays of cards and returns which has the higher kicker.
+     * @param c1 The first hand's cards.
+     * @param c2 The second hand's cards.
+     * @return -1 if c2 is better than c1 hand; 0 if both card arrays have the same rank; 1 if c1 is better than c2.
+     */
     private int compareFirstHigherCard(Card[] c1, Card[] c2) {
         for (int i = 0; i < 5; i++) {
             int comparison = (c1[i].rank.compareTo(c2[i].rank));
@@ -123,12 +145,23 @@ public class Hand implements Comparable<Hand> {
         return 0;
     }
 
-    // returns the highest pair of a set of sorted cards
+    /**
+     * Helper method for {@code compareTo}.
+     * Searches for a pair in a given set of cards.
+     * @param c Array of sorted cards.
+     * @return The highest pair in the passed set of sorted cards.
+     */
     private Rank getPairRank(Card[] c) {
         return getPairRank(c, null);
     }
 
-    // returns the highest pair of a set of sorted cards (excluding the rank passed as the second parameter)
+    /**
+     * Helper method for {@code compareTo}.
+     * Searches for the highest pair in the passed array of cards.
+     * @param c Array of sorted cards.
+     * @param excluding {@code null} or the rank of a pair not to take into account.
+     * @return The highest pair of a set of sorted cards (excluding the rank passed as the second parameter).
+     */
     private Rank getPairRank(Card[] c, Rank excluding) {
         for (Card card1 : c) {
             for (Card card2 : c) {
@@ -142,6 +175,10 @@ public class Hand implements Comparable<Hand> {
         throw new InvalidParameterException("No pair found");
     }
 
+    /**
+     * Converts the hand object into a string.
+     * @return A string holding information about all cards of the hand and the hand name.
+     */
     @Override
     public String toString() {
         String result = "";

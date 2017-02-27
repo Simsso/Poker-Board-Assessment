@@ -3,7 +3,15 @@ package com.timodenk.poker;
 import java.util.Arrays;
 import java.util.Collections;
 
+/**
+ * Static class that determines the rank of five cards.
+ */
 class CardAssessment {
+    /**
+     * Static method that determines the rank of the five cards passed. A rank could be for example Straight.
+     * @param c Five cards.
+     * @return The highest hand that can be built out of the given cards.
+     */
     static HandName getRank(Card[] c) {
         validateParameter(c);
         Arrays.sort(c, Collections.reverseOrder()); // sort descending (e.g. A, J, 5, 4, 2)
@@ -39,11 +47,22 @@ class CardAssessment {
         return HandName.HIGH_CARD;
     }
 
+    /**
+     * Validates the cards parameter of the {@code getRank} function.
+     * @param c Cards.
+     * @throws IllegalArgumentException If a card is {@code null} or the array length is not equal to 5.
+     */
     private static void validateParameter(Card[] c) {
         if (c.length != 5) {
             throw new IllegalArgumentException("Number of cards must be 5");
         }
+        for (Card card : c) {
+            if (c == null) {
+                throw new IllegalArgumentException("Cards may not be null");
+            }
+        }
     }
+
 
     private static boolean isRoyalFlush(Card[] c) {
         return (isStraightFlush(c) &&
@@ -109,6 +128,11 @@ class CardAssessment {
                 sameRank(c[3], c[4]));
     }
 
+    /**
+     * Checks whether several cards share the same rank.
+     * @param c Cards.
+     * @return True if all passed cards have the same rank.
+     */
     private static boolean sameRank(Card... c) {
         if (c.length == 0) {
             return true;
@@ -123,6 +147,12 @@ class CardAssessment {
         return true;
     }
 
+
+    /**
+     * Checks whether several cards share the same suit.
+     * @param c Cards.
+     * @return True if all passed cards have the same suit.
+     */
     private static boolean sameSuit(Card... c) {
         if (c.length == 0) {
             return true;

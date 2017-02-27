@@ -1,19 +1,40 @@
 package com.timodenk.poker;
 
+/**
+ * A single card, mostly used in combination with the {@link Deck} that the card has been taken from.
+ * Comparable to other cards ({@link Comparable}).
+ */
 public class Card implements Comparable<Card> {
-    final Rank rank;
-    final Suit suit;
+    final Rank rank; // the card's rank
+    final Suit suit; // the card's suit
 
+
+    /**
+     * Only possible constructor defining all properties of a card.
+     * @param rank The rank (e.g. 2, 3, ...)
+     * @param suit The suit (e.g. spades, diamonds, ...)
+     */
     Card(Rank rank, Suit suit) {
         this.rank = rank;
         this.suit = suit;
     }
 
+
+    /**
+     * One card can be compared to another card based on the card's ranks.
+     * @param o Another card.
+     * @return 0 if both cards have the same rank. 1 if this card has a higher rank. -1 if the other card has a higher rank.
+     */
     @Override
     public int compareTo(Card o) {
         return this.rank.ordinal() - o.rank.ordinal();
     }
 
+
+    /**
+     * Converts the card into a string.
+     * @return String containing both suit and rank information. The suit is using the UTF symbols for card suits.
+     */
     @Override
     public String toString() {
         return String.format("%s%s", this.rank.toString(), this.suit.toString());

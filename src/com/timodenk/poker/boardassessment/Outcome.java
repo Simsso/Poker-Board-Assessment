@@ -17,7 +17,6 @@ class Outcome {
             handSplitCount = new long[HandName.values().length],
             handLossCount = new long[HandName.values().length];
 
-
     /**
      * Default constructor for blank Outcome object.
      * All count values will be equal to 0.
@@ -25,7 +24,6 @@ class Outcome {
     Outcome() {
 
     }
-
 
     /**
      * Constructor to initialize the outcome object with values.
@@ -39,7 +37,6 @@ class Outcome {
         this.loss = loss;
     }
 
-
     /**
      * Adds a new win.
      * @param hand The hand that won.
@@ -48,7 +45,6 @@ class Outcome {
         this.win++;
         handWinCount[hand.name.ordinal()]++;
     }
-
 
     /**
      * Adds a new split.
@@ -59,7 +55,6 @@ class Outcome {
         handSplitCount[hand.name.ordinal()]++;
     }
 
-
     /**
      * Adds a new loss.
      * @param hand The hand that lost.
@@ -68,7 +63,6 @@ class Outcome {
         this.loss++;
         handLossCount[hand.name.ordinal()]++;
     }
-
 
     /**
      * Get win rate over all showdowns that have been added.
@@ -87,7 +81,6 @@ class Outcome {
         return (double)handWinCount[handName.ordinal()] / win;
     }
 
-
     /**
      * Get split rate over all showdowns that have been added.
      * @return The percentage of splits [0,1].
@@ -104,7 +97,6 @@ class Outcome {
     double getSplitRate(HandName handName) {
         return (double)handSplitCount[handName.ordinal()] / split;
     }
-
 
     /**
      * Get loss rate over all showdowns that have been added.
@@ -123,7 +115,6 @@ class Outcome {
         return (double)handLossCount[handName.ordinal()] / loss;
     }
 
-
     /**
      * @return Number of showdowns that have been added (sum of wins, splits, and losses)
      */
@@ -139,7 +130,6 @@ class Outcome {
         return handWinCount[handName.ordinal()] + handSplitCount[handName.ordinal()] + handLossCount[handName.ordinal()];
     }
 
-
     /**
      * Hand rate, meaning how often did a given hand occur.
      * @param handName The hand.
@@ -148,7 +138,6 @@ class Outcome {
     private double getHandRate(HandName handName) {
         return (double)getCount(handName) / getCount();
     }
-
 
     /**
      * Merges another {@link Outcome} object into this object.
@@ -169,7 +158,6 @@ class Outcome {
 
         return this; // for chaining
     }
-
 
     /**
      * Converts an {@link Outcome} object into a single-line string.
@@ -192,7 +180,6 @@ class Outcome {
         }
         return out;
     }
-
 
     /**
      * Number of logged showdowns of multiple {@link Outcome} objects.

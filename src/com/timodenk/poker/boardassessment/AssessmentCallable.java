@@ -34,7 +34,6 @@ class AssessmentCallable implements Callable<Outcome[]> {
     private final int iterations, // number of iterations (for this thread, not for the entire assessment)
             playerCount; // number of players (equal to the length of the {@code pocketCards} attribute)
 
-
     /**
      * Constructor for a thread's assessment task.
      * @param deck A deck of cards to work with. All other cards that are passed need to be taken from that deck.
@@ -53,7 +52,6 @@ class AssessmentCallable implements Callable<Outcome[]> {
 
         this.playerCount = pocketCards.length;
     }
-
 
     /**
      * Executes the actual statistical analysis of a game situation in a single thread.
@@ -109,7 +107,6 @@ class AssessmentCallable implements Callable<Outcome[]> {
         return outcome;
     }
 
-
     /**
      * In order to assess a players situation at a table it is necessary to find the best hand which the player can build out of their pocket cards and the community cards.
      * Therefore both need to be joined into one array of cards for further processing by the {@link Poker} class.
@@ -122,7 +119,6 @@ class AssessmentCallable implements Callable<Outcome[]> {
         out[5] = playerCards.card1;
         out[6] = playerCards.card2;
     }
-
 
     /**
      * For every iteration the pocket cards of all players will be filled, where they are set to {@code null}.
@@ -151,7 +147,6 @@ class AssessmentCallable implements Callable<Outcome[]> {
         }
     }
 
-
     /**
      * For every iteration the unknown community cards will be determined by taking a random cards from the deck.
      * Needs to be called even if all community cards are known, because they have to be taken from the deck.
@@ -168,7 +163,6 @@ class AssessmentCallable implements Callable<Outcome[]> {
             }
         }
     }
-
 
     /**
      * After building all player's hands the best hand(s) need to be found.

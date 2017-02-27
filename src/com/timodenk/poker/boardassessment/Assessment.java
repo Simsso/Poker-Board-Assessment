@@ -21,7 +21,6 @@ class Assessment {
     public static final int THREAD_COUNT = 4, // number of threads
             DEFAULT_ITERATIONS = 10000; // number of default iterations per game situation
 
-
     /**
      * Determines the win probabilities for all possible starting hands statistically.
      * All starting hands means that for example ("6 of spades", "7 of spades") will be assessed as well as ("7 of spades", "6 of spades") although the outcome is the same since the order does not matter.
@@ -52,7 +51,6 @@ class Assessment {
         }
         return outcomes.toArray(new PocketCardsOutcome[0]);
     }
-
 
     /**
      * Statistically determines the average outcome for pocket hands.
@@ -107,7 +105,6 @@ class Assessment {
         }
         return outcomes.toArray(new PocketCardsOutcome[0]);
     }
-
 
     /**
      * Statistically assesses any given poker situation for one player where all cards are unknown.
@@ -242,7 +239,6 @@ class Assessment {
         //System.out.printf("%9.4f µs (x%d hands)\n", (double)(System.nanoTime() - start) / 1e3 / Outcome.getCount(outcome), Outcome.getCount(outcome));
         return outcome;
     }
-
 
     /**
      * Frequently pocket cards of one player are known but the pocket cards of all other players shall be determined randomly for each iteration.

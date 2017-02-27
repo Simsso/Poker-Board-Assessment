@@ -1,5 +1,8 @@
 package com.timodenk.poker;
 
+/**
+ * Enumeration for hand names, e.g. Royal Flush, Four of a Kind, ...
+ */
 public enum HandName {
     // smaller ordinal represents a better hand
     ROYAL_FLUSH("Royal Flush"),
@@ -13,14 +16,22 @@ public enum HandName {
     PAIR("Pair"),
     HIGH_CARD("High Card");
 
-    public final String shortForm;
+    public final String name;
 
-    HandName(String shortForm) {
-        this.shortForm = shortForm;
+    /**
+     * Constructor
+     * @param name The name of the hand as a {@link String}.
+     */
+    HandName(String name) {
+        this.name = name;
     }
 
+    /**
+     * Getter method for the {@code name} attribute.
+     * @return The {@code name} attribute.
+     */
     @Override
     public String toString() {
-        return this.shortForm;
+        return this.name;
     }
 }

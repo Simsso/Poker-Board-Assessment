@@ -3,9 +3,16 @@ package com.timodenk.poker;
 import java.util.Arrays;
 import java.util.Collections;
 
+/**
+ * Static poker class containing parts of the Hold'em game logic.
+ */
 public class Poker {
-    private static int HAND_SIZE = 5;
+    private static final int HAND_SIZE = 5; // size of a hand at showdown
 
+    /**
+     * @param cards Array of five or more cards. At showdown usually 7 cards (5 community cards and 2 pocket cards).
+     * @return The best hand that can be formed with the given cards.
+     */
     public static Hand getBestHand(Card[] cards) {
         Card[][] combinations = possibleCombinations(cards);
         Hand[] hands = new Hand[combinations.length];
@@ -16,6 +23,12 @@ public class Poker {
         return hands[0]; // best Hand
     }
 
+    /**
+     * Generates all possible combinations of length 5, that can be formed with the given cards.
+     * Order does not matter so e.g. [A 2 3 4 5] and [A 3 2 4 5] will not both be returned for the example input [.
+     * @param cards The cards.
+     * @return All possible sets of five cards build from the parameter.
+     */
     private static Card[][] possibleCombinations(Card[] cards) {
         Card[][] combinations;
         if (cards.length <= HAND_SIZE) {
