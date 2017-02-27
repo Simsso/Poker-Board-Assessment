@@ -38,7 +38,7 @@ class Assessment {
                         if (rank1 == rank2 && suit1 == suit2) {
                             continue; // not possible
                         }
-                        Deck deck = new Deck();
+                        Deck deck = Card.getDeck();
                         try {
                             PocketCards pocketCards = new PocketCards(deck.takeCard(rank1, suit1), deck.takeCard(rank2, suit2));
                             outcomes.add(new PocketCardsOutcome(pocketCards, assess(deck, onePlayerPocketCards(pocketCards, opponents), iterations)[0]));
@@ -73,7 +73,7 @@ class Assessment {
                 Suit suit2 = Suit.SPADES;
 
                 try {
-                    Deck deck1 = new Deck();
+                    Deck deck1 = Card.getDeck();
                     PocketCards pocketCards = new PocketCards(deck1.takeCard(rank1, suit1), deck1.takeCard(rank2, suit2));
                     PocketCardsOutcome outcome = new PocketCardsOutcome(pocketCards, assess(
                             deck1,
@@ -89,7 +89,7 @@ class Assessment {
                     // suited combinations possible
                     suit2 = suit1;
                     try {
-                        Deck deck2 = new Deck();
+                        Deck deck2 = Card.getDeck();
                         PocketCards pocketCards = new PocketCards(deck2.takeCard(rank1, suit1), deck2.takeCard(rank2, suit2));
                         PocketCardsOutcome outcome = new PocketCardsOutcome(pocketCards, assess(
                                 deck2,
@@ -113,7 +113,7 @@ class Assessment {
      * @return Array of {@link Outcome} objects of which each is connected to exactly one {@link PocketCards} object (in the same order as passed in the pocket cards parameter).
      */
     static Outcome[] assess() {
-        return assess(new Deck(), new PocketCards[] { null }, DEFAULT_ITERATIONS);
+        return assess(Card.getDeck(), new PocketCards[] { null }, DEFAULT_ITERATIONS);
     }
 
     /**

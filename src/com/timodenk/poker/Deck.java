@@ -19,9 +19,10 @@ public class Deck {
 
     /**
      * Default constructor initializes all attributes.
+     * @param cards All cards on the deck.
      */
-    public Deck() {
-        this.cards = getDeckCards();
+    Deck(Card[] cards) {
+        this.cards = cards;
         this.shuffle();
     }
 
@@ -105,29 +106,12 @@ public class Deck {
     }
 
     /**
-     * @return Returns all 52 card that a standard 52-card deck contains.
-     */
-    private static Card[] getDeckCards() {
-        Card[] deck = new Card[52];
-
-        int i = 0;
-        for (Suit suit : Suit.values()) {
-            for (Rank rank : Rank.values()) {
-                deck[i] = new Card(rank, suit);
-                i++;
-            }
-        }
-
-        return deck;
-    }
-
-    /**
      * Clones the deck. This includes the current state, meaning which cards have been distributed.
      * @return The cloned deck.
      */
     @Override
     public Deck clone() {
-        Deck newDeck = new Deck();
+        Deck newDeck = Card.getDeck();
         for (Card card : this.cards) {
             if (this.availableCards.contains(card)) {
                 // card has not been taken yet

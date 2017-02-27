@@ -4,9 +4,54 @@ import com.timodenk.poker.*;
 
 public class Program {
     public static void main(String[] args) {
-        Deck deck = new Deck();
+        Deck deck = Card.getDeck();
 
         Outcome[] playerOutcomes;
+
+        try {
+            playerOutcomes = Assessment.assess(
+                    deck,
+                    new PocketCards[] {
+                            new PocketCards(
+                                    deck.takeCard(Rank.ACE, Suit.SPADES),
+                                    deck.takeCard(Rank.EIGHT, Suit.SPADES)
+                            ),
+                            new PocketCards(
+                                    deck.takeCard(Rank.KING, Suit.SPADES),
+                                    deck.takeCard(Rank.FIVE, Suit.SPADES)
+                            )
+                    },
+                    new Card[] {
+                            deck.takeCard(Rank.SIX, Suit.SPADES),
+                            deck.takeCard(Rank.SEVEN, Suit.HEARTS),
+                            deck.takeCard(Rank.FOUR, Suit.DIAMONDS),
+                            deck.takeCard(Rank.JACK, Suit.SPADES),
+                    },
+                    new Card[] {
+                            /*deck.takeCard(Rank.QUEEN, Suit.HEARTS),
+                            deck.takeCard(Rank.JACK, Suit.CLUBS),
+                            deck.takeCard(Rank.SIX, Suit.HEARTS),
+                            deck.takeCard(Rank.QUEEN, Suit.CLUBS),
+                            deck.takeCard(Rank.JACK, Suit.DIAMONDS),
+                            deck.takeCard(Rank.THREE, Suit.DIAMONDS),
+                            deck.takeCard(Rank.ACE, Suit.CLUBS),
+                            deck.takeCard(Rank.EIGHT, Suit.DIAMONDS),
+                            deck.takeCard(Rank.KING, Suit.CLUBS),
+                            deck.takeCard(Rank.THREE, Suit.CLUBS),*/
+                    },
+                    1000000
+            );
+
+            for (Outcome outcome : playerOutcomes) {
+                System.out.println(outcome);
+            }
+        } catch (DeckStateException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println();
+        deck.shuffle();
+
         try {
             playerOutcomes = Assessment.assess(
                     deck,

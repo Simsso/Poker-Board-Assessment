@@ -42,10 +42,10 @@ public class DeckStateException extends Exception {
     @Override
     public String toString() {
         if (card != null) {
-            return "Card was taken from the deck more than once: " + card.toString();
+            return "Card was taken from the deck more than once: " + card;
         }
         else if (rank != null && suit != null) {
-            return "Card was already taken from the deck: " + (new Card(rank, suit)).toString();
+            return "Card was already taken from the deck: " + rank + " " + suit;
         }
         else {
             return super.toString();

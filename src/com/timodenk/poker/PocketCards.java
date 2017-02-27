@@ -1,7 +1,7 @@
 package com.timodenk.poker;
 
 /**
- * The {@link PocketCards} class contains two cards.
+ * The {@link PocketCards} class contains two {@link Card}s.
  * Both cards should be taken from the same {@link Deck}.
  */
 public class PocketCards {

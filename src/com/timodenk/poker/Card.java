@@ -11,12 +11,30 @@ public class Card implements Comparable<Card> {
 
     /**
      * Only possible constructor defining all properties of a card.
+     * Constructor is defined as private because cards should always be taken from a {@link Deck} instead of creating them.
      * @param rank The rank (e.g. 2, 3, ...)
      * @param suit The suit (e.g. spades, diamonds, ...)
      */
-    Card(Rank rank, Suit suit) {
+    private Card(Rank rank, Suit suit) {
         this.rank = rank;
         this.suit = suit;
+    }
+
+    /**
+     * @return A {@link Deck} with all 52 card that a standard 52-card deck contains.
+     */
+    public static Deck getDeck() {
+        Card[] deck = new Card[52];
+
+        int i = 0;
+        for (Suit suit : Suit.values()) {
+            for (Rank rank : Rank.values()) {
+                deck[i] = new Card(rank, suit);
+                i++;
+            }
+        }
+
+        return new Deck(deck);
     }
 
 
