@@ -1,10 +1,10 @@
 package com.timodenk.poker;
 
 public class Card implements Comparable<Card> {
-    public final Rank rank;
-    public final Suit suit;
+    final Rank rank;
+    final Suit suit;
 
-    public Card(Rank rank, Suit suit) {
+    Card(Rank rank, Suit suit) {
         this.rank = rank;
         this.suit = suit;
     }
@@ -16,6 +16,6 @@ public class Card implements Comparable<Card> {
 
     @Override
     public String toString() {
-        return this.rank.toString() + this.suit.toString();
+        return String.format("%s%s", this.rank.toString(), this.suit.toString());
     }
 }

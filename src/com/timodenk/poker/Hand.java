@@ -1,5 +1,7 @@
 package com.timodenk.poker;
 
+import java.security.InvalidParameterException;
+
 public class Hand implements Comparable<Hand> {
     public final HandName name;
     public final Card[] cards;
@@ -137,14 +139,14 @@ public class Hand implements Comparable<Hand> {
                 }
             }
         }
-        return null; // no pair found
+        throw new InvalidParameterException("No pair found");
     }
 
     @Override
     public String toString() {
         String result = "";
-        for (int i = 0; i < cards.length; i++) {
-            result += cards[i].toString() + " ";
+        for (Card card : cards) {
+            result += String.format("%s ", card.toString());
         }
         return result + name.toString();
     }

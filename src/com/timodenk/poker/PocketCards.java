@@ -8,8 +8,16 @@ public class PocketCards {
         this.card2 = card2;
     }
 
+    public boolean isSuited() {
+        return card1.suit == card2.suit;
+    }
+
+    public boolean isPair() {
+        return card1.rank == card2.rank;
+    }
+
     @Override
     public String toString() {
-        return card1 + " " + card2;
+        return String.format("%s %s", card1, card2);
     }
 }

@@ -5,6 +5,35 @@ import com.timodenk.poker.*;
 public class Program {
     public static void main(String[] args) {
         Deck deck = new Deck();
+
+        Outcome[] playerOutcomes;
+        try {
+            playerOutcomes = Assessment.assess(
+                    deck,
+                    new PocketCards[] {
+                            new PocketCards(
+                                    deck.takeCard(Rank.ACE, Suit.SPADES),
+                                    deck.takeCard(Rank.QUEEN, Suit.SPADES)
+                            ),
+                            null
+                    },
+                    new Card[] {
+                            deck.takeCard(Rank.KING, Suit.SPADES),
+                            deck.takeCard(Rank.SEVEN, Suit.DIAMONDS),
+                            deck.takeCard(Rank.TEN, Suit.SPADES)
+                    },
+                    new Card[0],
+                    100000
+            );
+            System.out.println(playerOutcomes[0].toTable());
+            System.out.println(HandName.ROYAL_FLUSH + ": " + playerOutcomes[0].getWinRate(HandName.ROYAL_FLUSH));
+        } catch (DeckStateException e) {
+            e.getMessage();
+        }
+
+        System.out.println();
+        deck.shuffle();
+
         try {
             PocketCards[] pocketCards = new PocketCards[] {
                     new PocketCards(
@@ -21,7 +50,7 @@ public class Program {
                     )*/
             };
 
-            Outcome[] playerOutcomes = WinRate.winRateFor(
+            playerOutcomes = Assessment.assess(
                     deck,
                     pocketCards,
                     new Card[] { // community cards
@@ -41,36 +70,18 @@ public class Program {
                 System.out.println(pocketCards[i] + " " + playerOutcomes[i].getWinRate());
             }
         } catch (DeckStateException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void pokerHandProbabilities(int iterations) {
-        int[] handNameOccurrences = new int[HandName.values().length];
-        for (int i = 0; i < iterations; i++) {
-            Deck deck = new Deck();
-
-            Card[] cards = new Card[0];
-            try {
-                cards = deck.getNCards(7);
-                // not going to throw because the deck has just been created above
-            } catch (DeckStateException e) {
-                e.printStackTrace();
-            }
-            Hand hand = Poker.getBestHandFromCards(cards);
-            handNameOccurrences[hand.name.ordinal()]++;
-            if (i % (iterations / 100) == 0) {
-                System.out.print(String.valueOf(i) + "\t");
-                System.out.println(hand.toString());
-            }
+            e.getMessage();
         }
 
         System.out.println();
-        for (int i = 0; i < handNameOccurrences.length; i++) {
-            System.out.println(Math.round(((double)handNameOccurrences[i] / (double)iterations) * 100000000d) / 1000000d
-                    + "% \t"
-                    + HandName.values()[i]
-                    + " (" + handNameOccurrences[i] + ")");
+
+        System.out.println(Assessment.assess()[0].toTable());
+
+        System.out.println();
+
+        PocketCardsOutcome[] outcomes = Assessment.significantPocketCards(1, Assessment.DEFAULT_ITERATIONS);
+        for (PocketCardsOutcome pocketCardsOutcome : outcomes) {
+            System.out.println(pocketCardsOutcome.toString());
         }
     }
 }

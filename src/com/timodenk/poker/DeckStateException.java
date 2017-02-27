@@ -6,11 +6,11 @@ public class DeckStateException extends Exception {
     private Rank rank = null;
     private Suit suit = null;
 
-    public DeckStateException(Card card) {
+    DeckStateException(Card card) {
         this.card = card;
     }
 
-    public DeckStateException(Rank rank, Suit suit) {
+    DeckStateException(Rank rank, Suit suit) {
         this.rank = rank;
         this.suit = suit;
     }

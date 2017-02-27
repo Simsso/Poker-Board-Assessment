@@ -6,8 +6,8 @@ import java.util.Collections;
 public class Poker {
     private static int HAND_SIZE = 5;
 
-    public static Hand getBestHandFromCards(Card[] cards) {
-        Card[][] combinations = possibleFiveCardCombinations(cards);
+    public static Hand getBestHand(Card[] cards) {
+        Card[][] combinations = possibleCombinations(cards);
         Hand[] hands = new Hand[combinations.length];
         for (int i = 0; i < combinations.length; i++) {
             hands[i] = new Hand(CardAssessment.getRank(combinations[i]), combinations[i]);
@@ -16,7 +16,7 @@ public class Poker {
         return hands[0]; // best Hand
     }
 
-    private static Card[][] possibleFiveCardCombinations(Card[] cards) {
+    private static Card[][] possibleCombinations(Card[] cards) {
         Card[][] combinations;
         if (cards.length <= HAND_SIZE) {
             combinations = new Card[1][];
