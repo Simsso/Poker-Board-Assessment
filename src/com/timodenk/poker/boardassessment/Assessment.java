@@ -38,7 +38,7 @@ class Assessment {
                         if (rank1 == rank2 && suit1 == suit2) {
                             continue; // not possible
                         }
-                        Deck deck = Card.getDeck();
+                        Deck deck = new Deck();
                         try {
                             PocketCards pocketCards = new PocketCards(deck.takeCard(rank1, suit1), deck.takeCard(rank2, suit2));
                             outcomes.add(new PocketCardsOutcome(pocketCards, assess(deck, onePlayerPocketCards(pocketCards, opponents), iterations)[0]));
@@ -61,49 +61,20 @@ class Assessment {
      * @return Array of {@link PocketCardsOutcome} objects holding all possible starting hands with their statistical outcome.
      */
     static PocketCardsOutcome[] significantPocketCards(int opponents, int iterations) {
-        List<PocketCardsOutcome> outcomes = new ArrayList<PocketCardsOutcome>();
-        for (Rank rank1 : Rank.values()) {
-            for (Rank rank2 : Rank.values()) {
-                if (rank2.ordinal() > rank1.ordinal()) {
-                    continue; // combination occurs the other way around
-                }
-
-                // representative for off-suit combinations
-                Suit suit1 = Suit.CLUBS;
-                Suit suit2 = Suit.SPADES;
-
-                try {
-                    Deck deck1 = Card.getDeck();
-                    PocketCards pocketCards = new PocketCards(deck1.takeCard(rank1, suit1), deck1.takeCard(rank2, suit2));
-                    PocketCardsOutcome outcome = new PocketCardsOutcome(pocketCards, assess(
-                            deck1,
-                            onePlayerPocketCards(pocketCards, opponents),
-                            iterations)[0]);
-                    outcomes.add(outcome);
-
-                } catch (DeckStateException e) {
-                    e.printStackTrace();
-                }
-
-                if (rank1 != rank2) {
-                    // suited combinations possible
-                    suit2 = suit1;
-                    try {
-                        Deck deck2 = Card.getDeck();
-                        PocketCards pocketCards = new PocketCards(deck2.takeCard(rank1, suit1), deck2.takeCard(rank2, suit2));
-                        PocketCardsOutcome outcome = new PocketCardsOutcome(pocketCards, assess(
-                                deck2,
-                                onePlayerPocketCards(pocketCards, opponents),
-                                iterations)[0]);
-                        outcomes.add(outcome);
-
-                    } catch (DeckStateException e) {
-                        e.printStackTrace();
-                    }
-                }
+        PocketCards[] significantPocketCards = PocketCardAnalysis.getSignificantPocketCards();
+        PocketCardsOutcome[] outcomes = new PocketCardsOutcome[significantPocketCards.length];
+        for (int i = 0; i < significantPocketCards.length; i++) {
+            try {
+                PocketCards pocketCards = significantPocketCards[i];
+                Deck deck = new Deck();
+                PocketCards pocketCardsSameDeck = null;
+                pocketCardsSameDeck = new PocketCards(deck.takeCardLike(pocketCards.card1), deck.takeCardLike(pocketCards.card2));
+                outcomes[i] = new PocketCardsOutcome(pocketCardsSameDeck, Assessment.assess(deck, onePlayerPocketCards(pocketCardsSameDeck, opponents), iterations)[0]);
+            } catch (DeckStateException e) {
+                e.printStackTrace();
             }
         }
-        return outcomes.toArray(new PocketCardsOutcome[0]);
+        return outcomes;
     }
 
     /**
@@ -113,7 +84,7 @@ class Assessment {
      * @return Array of {@link Outcome} objects of which each is connected to exactly one {@link PocketCards} object (in the same order as passed in the pocket cards parameter).
      */
     static Outcome[] assess() {
-        return assess(Card.getDeck(), new PocketCards[] { null }, DEFAULT_ITERATIONS);
+        return assess(new Deck(), new PocketCards[] { null }, DEFAULT_ITERATIONS);
     }
 
     /**

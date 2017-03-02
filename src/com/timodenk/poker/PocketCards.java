@@ -2,13 +2,14 @@ package com.timodenk.poker;
 
 /**
  * The {@link PocketCards} class contains two {@link Card}s.
- * Both cards should be taken from the same {@link Deck}.
+ * For some applications both cards should be taken from the same {@link Deck}.
  */
 public class PocketCards {
     public Card card1, card2; // both cards
 
     /**
-     * Two pocker cards (no specific order).
+     * Two poker cards (no specific order).
+     *
      * @param card1 A card.
      * @param card2 Another card.
      */

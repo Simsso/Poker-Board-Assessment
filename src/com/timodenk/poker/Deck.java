@@ -9,7 +9,7 @@ import java.util.Random;
  */
 public class Deck {
     // all cards n = 52
-    private final Card[] cards;
+    private final DeckCard[] cards;
 
     // all cards that are still available (not distributed)
     private ArrayList<Card> availableCards;
@@ -19,10 +19,19 @@ public class Deck {
 
     /**
      * Default constructor initializes all attributes.
-     * @param cards All cards on the deck.
+     * A {@link Deck} with all 52 card that a standard 52-card deck contains.
      */
-    Deck(Card[] cards) {
-        this.cards = cards;
+    public Deck() {
+        this.cards = new DeckCard[52];
+
+        int i = 0;
+        for (Suit suit : Suit.values()) {
+            for (Rank rank : Rank.values()) {
+                this.cards[i] = new DeckCard(this, rank, suit);
+                i++;
+            }
+        }
+
         this.shuffle();
     }
 
@@ -105,13 +114,21 @@ public class Deck {
         throw new DeckStateException(rank, suit);
     }
 
+    public Card takeCardLike(Card card) throws DeckStateException {
+        return takeCard(card.rank, card.suit);
+    }
+
+    public PocketCards takeCardsLike(PocketCards pocketCards) throws DeckStateException {
+        return new PocketCards(this.takeCardLike(pocketCards.card1), this.takeCardLike(pocketCards.card2));
+    }
+
     /**
      * Clones the deck. This includes the current state, meaning which cards have been distributed.
      * @return The cloned deck.
      */
     @Override
     public Deck clone() {
-        Deck newDeck = Card.getDeck();
+        Deck newDeck = new Deck();
         for (Card card : this.cards) {
             if (this.availableCards.contains(card)) {
                 // card has not been taken yet

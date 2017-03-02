@@ -8,38 +8,24 @@ public class Card implements Comparable<Card> {
     final Rank rank; // the card's rank
     final Suit suit; // the card's suit
 
-
     /**
      * Only possible constructor defining all properties of a card.
-     * Constructor is defined as private because cards should always be taken from a {@link Deck} instead of creating them.
+     *
      * @param rank The rank (e.g. 2, 3, ...)
      * @param suit The suit (e.g. spades, diamonds, ...)
      */
-    private Card(Rank rank, Suit suit) {
+    public Card(Rank rank, Suit suit) {
         this.rank = rank;
         this.suit = suit;
     }
 
-    /**
-     * @return A {@link Deck} with all 52 card that a standard 52-card deck contains.
-     */
-    public static Deck getDeck() {
-        Card[] deck = new Card[52];
-
-        int i = 0;
-        for (Suit suit : Suit.values()) {
-            for (Rank rank : Rank.values()) {
-                deck[i] = new Card(rank, suit);
-                i++;
-            }
-        }
-
-        return new Deck(deck);
+    public boolean equals(Card card) {
+        return this.rank == card.rank && this.suit == card.suit;
     }
-
 
     /**
      * One card can be compared to another card based on the card's ranks.
+     *
      * @param o Another card.
      * @return 0 if both cards have the same rank. 1 if this card has a higher rank. -1 if the other card has a higher rank.
      */
@@ -48,9 +34,9 @@ public class Card implements Comparable<Card> {
         return this.rank.ordinal() - o.rank.ordinal();
     }
 
-
     /**
      * Converts the card into a string.
+     *
      * @return String containing both suit and rank information. The suit is using the UTF symbols for card suits.
      */
     @Override
