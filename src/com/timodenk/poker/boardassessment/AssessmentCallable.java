@@ -17,19 +17,19 @@ class AssessmentCallable implements Callable<Outcome[]> {
     private final Deck deck;
 
     // initial pocket cards of all players holding (holding null for randomly generated ones)
-    private final PocketCards[] pocketCardsInitial;
+    private final DeckStartingHand[] startingHandsInitial;
 
     // pocket cards of all players, modified very frequently during execution (for every iteration)
-    private PocketCards[] pocketCards;
+    private DeckStartingHand[] pocketCards;
 
     // taken cards (cards that are not available anymore / taken from the deck, but not at any of the players hands or on the board)
-    private final Card[] takenCards,
+    private final DeckCard[] takenCards,
 
     // initial community cards (null values for cards that are not known yet)
     communityCardsInitial;
 
     // community cards without null values (cards to work with; will be modified during every iteration unless all cards are predetermined)
-    private Card[] communityCards = new Card[5];
+    private DeckCard[] communityCards = new DeckCard[5];
 
     private final int iterations, // number of iterations (for this thread, not for the entire assessment)
             playerCount; // number of players (equal to the length of the {@code pocketCards} attribute)
@@ -37,14 +37,14 @@ class AssessmentCallable implements Callable<Outcome[]> {
     /**
      * Constructor for a thread's assessment task.
      * @param deck A deck of cards to work with. All other cards that are passed need to be taken from that deck.
-     * @param pocketCards Array of {@link PocketCards} objects. The array length determines the number of players who have not folded their cards yet.
+     * @param pocketCards Array of {@link StartingHand} objects. The array length determines the number of players who have not folded their cards yet.
      * @param communityCards Array holding the community cards (null for unknown cards or shorter length).
      * @param takenCards Array of cards that are known to be not in the game anymore (e.g. flashed or openly folded cards). These cards will not be taken from the deck for random filling of pocket or community cards.
      * @param iterations Number of iterations for this thread, not for the entire assessment.
      */
-    AssessmentCallable(final Deck deck, final PocketCards[] pocketCards, final Card[] communityCards, final Card[] takenCards, final int iterations) {
+    AssessmentCallable(final Deck deck, final DeckStartingHand[] pocketCards, final DeckCard[] communityCards, final DeckCard[] takenCards, final int iterations) {
         this.deck = deck;
-        this.pocketCardsInitial = pocketCards;
+        this.startingHandsInitial = pocketCards;
         this.communityCardsInitial = communityCards;
         this.takenCards = takenCards;
 
@@ -114,7 +114,7 @@ class AssessmentCallable implements Callable<Outcome[]> {
      * @param communityCards Five community cards.
      * @param playerCards Two pocket cards of a player.
      */
-    private static void join(Card[] out, Card[] communityCards, PocketCards playerCards) {
+    private static void join(Card[] out, Card[] communityCards, StartingHand playerCards) {
         System.arraycopy(communityCards, 0, out, 0, 5);
         out[5] = playerCards.card1;
         out[6] = playerCards.card2;
@@ -125,25 +125,25 @@ class AssessmentCallable implements Callable<Outcome[]> {
      * @throws DeckStateException Thrown if there is an error with the deck of cards (e.g. not enough cards available for the number of players).
      */
     private void fillPocketCards() throws DeckStateException {
-        pocketCards = new PocketCards[playerCount];
+        pocketCards = new DeckStartingHand[playerCount];
         for (int i = 0; i < playerCount; i++) {
-            Card card1, card2;
-            if (pocketCardsInitial[i].card1 == null) {
+            DeckCard card1, card2;
+            if (startingHandsInitial[i].card1 == null) {
                 card1 = deck.getNextCard();
             }
             else {
-                card1 = pocketCardsInitial[i].card1;
+                card1 = startingHandsInitial[i].card1;
                 deck.takeCards(card1);
             }
 
-            if (pocketCardsInitial[i].card2 == null) {
+            if (startingHandsInitial[i].card2 == null) {
                 card2 = deck.getNextCard();
             }
             else {
-                card2 = pocketCardsInitial[i].card2;
+                card2 = startingHandsInitial[i].card2;
                 deck.takeCards(card2);
             }
-            pocketCards[i] = new PocketCards(card1, card2);
+            pocketCards[i] = new DeckStartingHand(card1, card2);
         }
     }
 

@@ -12,7 +12,7 @@ public class Deck {
     private final DeckCard[] cards;
 
     // all cards that are still available (not distributed)
-    private ArrayList<Card> availableCards;
+    private ArrayList<DeckCard> availableCards;
 
     // random object to ensure random distribution
     private Random random = new Random();
@@ -39,8 +39,8 @@ public class Deck {
      * Takes several cards from the deck (marks them as distributed).
      * @param cards The cards to take from the deck.
      */
-    public void takeCards(Card... cards) {
-        for (Card card : cards) {
+    public void takeCards(DeckCard... cards) {
+        for (DeckCard card : cards) {
             this.availableCards.remove(card);
         }
     }
@@ -49,7 +49,7 @@ public class Deck {
      * Shuffles the deck, that means all cards are available again.
      */
     public void shuffle() {
-        this.availableCards = new ArrayList<Card>(Arrays.asList(this.cards));
+        this.availableCards = new ArrayList<DeckCard>(Arrays.asList(this.cards));
     }
 
     /**
@@ -57,12 +57,12 @@ public class Deck {
      * @return A random card which is not distributed.
      * @throws DeckStateException Thrown e.g. if no more cards are avialable on the deck.
      */
-    public Card getNextCard() throws DeckStateException {
+    public DeckCard getNextCard() throws DeckStateException {
         if (this.availableCards.size() == 0) {
             throw new DeckStateException("All cards have been taken already.");
         }
         int randomIndex = random.nextInt(this.availableCards.size());
-        Card card = this.availableCards.get(randomIndex);
+        DeckCard card = this.availableCards.get(randomIndex);
         this.availableCards.remove(randomIndex);
         return card;
     }
@@ -73,8 +73,8 @@ public class Deck {
      * @return The taken cards.
      * @throws DeckStateException Thrown e.g. if there are not enough cards available.
      */
-    public Card[] getNCards(int n) throws DeckStateException {
-        Card[] cards = new Card[n];
+    public DeckCard[] getNCards(int n) throws DeckStateException {
+        DeckCard[] cards = new DeckCard[n];
         for (int i = 0; i < n; i++) {
             cards[i] = getNextCard();
         }
@@ -88,9 +88,9 @@ public class Deck {
      * @return The card with equal rank and suit as the given card but from this deck.
      * @throws DeckStateException Thrown e.g. if there are not enough cards available.
      */
-    public Card getCardLike(Card sameCardFromDifferentDeck) throws DeckStateException {
-        for (Card card : this.cards) {
-            if (card.suit == sameCardFromDifferentDeck.suit && card.rank == sameCardFromDifferentDeck.rank) {
+    public DeckCard getCardLike(Card sameCardFromDifferentDeck) throws DeckStateException {
+        for (DeckCard card : this.cards) {
+            if (card.equals(sameCardFromDifferentDeck)) {
                 return card;
             }
         }
@@ -104,8 +104,8 @@ public class Deck {
      * @return The taken card.
      * @throws DeckStateException Thrown if the card is not available anymore.
      */
-    public Card takeCard(Rank rank, Suit suit) throws DeckStateException {
-        for (Card card : availableCards) {
+    public DeckCard takeCard(Rank rank, Suit suit) throws DeckStateException {
+        for (DeckCard card : availableCards) {
             if (card.rank == rank && card.suit == suit) {
                 this.availableCards.remove(card);
                 return card;
@@ -114,12 +114,12 @@ public class Deck {
         throw new DeckStateException(rank, suit);
     }
 
-    public Card takeCardLike(Card card) throws DeckStateException {
+    public DeckCard takeCardLike(Card card) throws DeckStateException {
         return takeCard(card.rank, card.suit);
     }
 
-    public PocketCards takeCardsLike(PocketCards pocketCards) throws DeckStateException {
-        return new PocketCards(this.takeCardLike(pocketCards.card1), this.takeCardLike(pocketCards.card2));
+    public DeckStartingHand takeCardsLike(StartingHand startingHand) throws DeckStateException {
+        return new DeckStartingHand(this.takeCardLike(startingHand.card1), this.takeCardLike(startingHand.card2));
     }
 
     /**

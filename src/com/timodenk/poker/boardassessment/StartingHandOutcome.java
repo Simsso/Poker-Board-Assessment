@@ -1,50 +1,50 @@
 package com.timodenk.poker.boardassessment;
 
-import com.timodenk.poker.PocketCards;
+import com.timodenk.poker.StartingHand;
 
 /**
  * Extension of the {@link Outcome} object by the pocket cards that have achieved the outcome.
  * This is particularly useful when the task is not the assessment of just a single situation.
  */
-class PocketCardsOutcome extends Outcome {
-    private PocketCards pocketCards; // pocket cards that have this outcome
+class StartingHandOutcome extends Outcome {
+    private StartingHand startingHand; // pocket cards that have this outcome
 
     /**
      * Default constructor extended by the pocket cards.
-     * @param pocketCards Pocket cards.
+     * @param startingHand Pocket cards.
      */
-    PocketCardsOutcome(PocketCards pocketCards) {
+    StartingHandOutcome(StartingHand startingHand) {
         super();
-        this.pocketCards = pocketCards;
+        this.startingHand = startingHand;
     }
 
     /**
      * Constructor to initialize the outcome object with values.
-     * @param pocketCards Pocket cards.
+     * @param startingHand Pocket cards.
      * @param win Number of wins.
      * @param split Number of splits.
      * @param loss Number of losses.
      */
-    PocketCardsOutcome(PocketCards pocketCards, long win, long split, long loss) {
+    StartingHandOutcome(StartingHand startingHand, long win, long split, long loss) {
         super(win, split, loss);
-        this.pocketCards = pocketCards;
+        this.startingHand = startingHand;
     }
 
     /**
      * Constructor to extend a given {@link Outcome} object with a pair of pocket cards.
-     * @param pocketCards The pocket cards.
+     * @param startingHand The pocket cards.
      * @param outcome The outcome to join into this object.
      */
-    PocketCardsOutcome(PocketCards pocketCards, Outcome outcome) {
+    StartingHandOutcome(StartingHand startingHand, Outcome outcome) {
         this.merge(outcome);
-        this.pocketCards = pocketCards;
+        this.startingHand = startingHand;
     }
 
     /**
      * Getter method for the pocket cards attribut.
      */
-    public PocketCards getPocketCards() {
-        return pocketCards;
+    public StartingHand getStartingHand() {
+        return startingHand;
     }
 
     /**
@@ -52,6 +52,6 @@ class PocketCardsOutcome extends Outcome {
      */
     @Override
     public String toString() {
-        return this.pocketCards.toString() + " " + super.toString();
+        return this.startingHand.toString() + " " + super.toString();
     }
 }

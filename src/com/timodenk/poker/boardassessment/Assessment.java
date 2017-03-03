@@ -18,7 +18,7 @@ import java.util.concurrent.*;
  */
 class Assessment {
 
-    public static final int THREAD_COUNT = 4, // number of threads
+    public static final int THREAD_COUNT = 12, // number of threads
             DEFAULT_ITERATIONS = 10000; // number of default iterations per game situation
 
     /**
@@ -27,10 +27,10 @@ class Assessment {
      * This approach is by far less inefficient than possible.
      * @param opponents Number of opponents (randomly generated pocket cards) that play against the pocket cards.
      * @param iterations Number of iterations; the higher, the more precise is the outcome.
-     * @return Array of {@link PocketCardsOutcome} objects holding all possible starting hands with their statistical outcome.
+     * @return Array of {@link StartingHandOutcome} objects holding all possible starting hands with their statistical outcome.
      */
-    static PocketCardsOutcome[] allPocketCards(int opponents, int iterations) {
-        List<PocketCardsOutcome> outcomes = new ArrayList<PocketCardsOutcome>();
+    static StartingHandOutcome[] allPocketCards(int opponents, int iterations) {
+        List<StartingHandOutcome> outcomes = new ArrayList<StartingHandOutcome>();
         for (Rank rank1 : Rank.values()) {
             for (Rank rank2 : Rank.values()) {
                 for (Suit suit1 : Suit.values()) {
@@ -40,8 +40,8 @@ class Assessment {
                         }
                         Deck deck = new Deck();
                         try {
-                            PocketCards pocketCards = new PocketCards(deck.takeCard(rank1, suit1), deck.takeCard(rank2, suit2));
-                            outcomes.add(new PocketCardsOutcome(pocketCards, assess(deck, onePlayerPocketCards(pocketCards, opponents), iterations)[0]));
+                            DeckStartingHand startingHand = new DeckStartingHand(deck.takeCard(rank1, suit1), deck.takeCard(rank2, suit2));
+                            outcomes.add(new StartingHandOutcome(startingHand, assess(deck, onePlayerPocketCards(startingHand, opponents), iterations)[0]));
                         } catch (DeckStateException e) {
                             e.printStackTrace();
                         }
@@ -49,7 +49,7 @@ class Assessment {
                 }
             }
         }
-        return outcomes.toArray(new PocketCardsOutcome[0]);
+        return outcomes.toArray(new StartingHandOutcome[0]);
     }
 
     /**
@@ -58,18 +58,18 @@ class Assessment {
      * In other words it determines the outcome for all ranks combinations suited and off-suit.
      * @param opponents Number of opponents (randomly generated pocket cards) that play against the pocket cards.
      * @param iterations Number of iterations; the higher, the more precise is the outcome.
-     * @return Array of {@link PocketCardsOutcome} objects holding all possible starting hands with their statistical outcome.
+     * @return Array of {@link StartingHandOutcome} objects holding all possible starting hands with their statistical outcome.
      */
-    static PocketCardsOutcome[] significantPocketCards(int opponents, int iterations) {
-        PocketCards[] significantPocketCards = PocketCardAnalysis.getSignificantPocketCards();
-        PocketCardsOutcome[] outcomes = new PocketCardsOutcome[significantPocketCards.length];
+    static StartingHandOutcome[] significantPocketCards(int opponents, int iterations) {
+        StartingHand[] significantPocketCards = StartingHand.getSignificant();
+        StartingHandOutcome[] outcomes = new StartingHandOutcome[significantPocketCards.length];
         for (int i = 0; i < significantPocketCards.length; i++) {
             try {
-                PocketCards pocketCards = significantPocketCards[i];
+                StartingHand startingHand = significantPocketCards[i];
                 Deck deck = new Deck();
-                PocketCards pocketCardsSameDeck = null;
-                pocketCardsSameDeck = new PocketCards(deck.takeCardLike(pocketCards.card1), deck.takeCardLike(pocketCards.card2));
-                outcomes[i] = new PocketCardsOutcome(pocketCardsSameDeck, Assessment.assess(deck, onePlayerPocketCards(pocketCardsSameDeck, opponents), iterations)[0]);
+                DeckStartingHand startingHandSameDeck = null;
+                startingHandSameDeck = new DeckStartingHand(deck, startingHand.card1, startingHand.card2);
+                outcomes[i] = new StartingHandOutcome(startingHandSameDeck, Assessment.assess(deck, onePlayerPocketCards(startingHandSameDeck, opponents), iterations)[0]);
             } catch (DeckStateException e) {
                 e.printStackTrace();
             }
@@ -81,10 +81,10 @@ class Assessment {
      * Statistically assesses any given poker situation for one player where all cards are unknown.
      * Useful for determining the probability for hands.
      * The method is multi-threaded.
-     * @return Array of {@link Outcome} objects of which each is connected to exactly one {@link PocketCards} object (in the same order as passed in the pocket cards parameter).
+     * @return Array of {@link Outcome} objects of which each is connected to exactly one {@link DeckStartingHand} object (in the same order as passed in the pocket cards parameter).
      */
     static Outcome[] assess() {
-        return assess(new Deck(), new PocketCards[] { null }, DEFAULT_ITERATIONS);
+        return assess(new Deck(), new DeckStartingHand[] { null }, DEFAULT_ITERATIONS);
     }
 
     /**
@@ -93,10 +93,10 @@ class Assessment {
      * @param deck A deck of cards that the other cards which are passed as parameters are taken from.
      * @param pocketCards Array holding the pocket cards of the players at the table. The number of array element defines the number of players, for unknown cards or pocket hands leave the value at {@code null}.
      * @param iterations Number of iterations for determining the outcomes. Common are values higher than 10,000.
-     * @return Array of {@link Outcome} objects of which each is connected to exactly one {@link PocketCards} object (in the same order as passed in the pocket cards parameter).
+     * @return Array of {@link Outcome} objects of which each is connected to exactly one {@link StartingHand} object (in the same order as passed in the pocket cards parameter).
      */
-    static Outcome[] assess(final Deck deck, final PocketCards[] pocketCards, final int iterations) {
-        return assess(deck, pocketCards, null, new Card[0], iterations);
+    static Outcome[] assess(final Deck deck, final DeckStartingHand[] pocketCards, final int iterations) {
+        return assess(deck, pocketCards, null, new DeckCard[0], iterations);
     }
 
     /**
@@ -107,12 +107,12 @@ class Assessment {
      * @param communityCards Array of community cards. For unknown cards leave the value at null. If all cards are unknown null can be passed.
      * @param takenCards Array of cards that are and not in the game anymore; like flashed or folded cards.
      * @param iterations Number of iterations for determining the outcomes. Common are values higher than 10,000.
-     * @return Array of {@link Outcome} objects of which each is connected to exactly one {@link PocketCards} object (in the same order as passed in the pocket cards parameter).
+     * @return Array of {@link Outcome} objects of which each is connected to exactly one {@link StartingHand} object (in the same order as passed in the pocket cards parameter).
      */
-    static Outcome[] assess(final Deck deck, final PocketCards[] pocketCards, final Card[] communityCards, final Card[] takenCards, final int iterations) {
-        long start = System.nanoTime(); // performance
+    static Outcome[] assess(final Deck deck, final DeckStartingHand[] pocketCards, final DeckCard[] communityCards, final DeckCard[] takenCards, final int iterations) {
+        final long start = System.nanoTime(); // performance
 
-        int playerCount = pocketCards.length;
+        final int playerCount = pocketCards.length;
 
         if (pocketCards.length < 1) {
             return null;
@@ -142,9 +142,9 @@ class Assessment {
 
             // objects for each thread
             Deck threadDeck = deck.clone();
-            Card[] threadCommunityCards = new Card[5];
-            Card[] threadTakenCards = new Card[takenCards.length];
-            PocketCards[] threadPocketCards = new PocketCards[playerCount];
+            DeckCard[] threadCommunityCards = new DeckCard[5];
+            DeckCard[] threadTakenCards = new DeckCard[takenCards.length];
+            DeckStartingHand[] threadPocketCards = new DeckStartingHand[playerCount];
 
             try {
                 // copy community cards to threadCommunityCards
@@ -165,16 +165,16 @@ class Assessment {
                 // copy pocket cards to threadPocketCards (null values possible for not determined cards)
                 for (int i = 0; i < playerCount; i++) {
                     if (pocketCards[i] == null) {
-                        threadPocketCards[i] = new PocketCards(null, null);
+                        threadPocketCards[i] = new DeckStartingHand(null, null);
                     }
                     else if (pocketCards[i].card1 != null && pocketCards[i].card2 == null) {
-                        threadPocketCards[i] = new PocketCards(threadDeck.getCardLike(pocketCards[i].card1), null);
+                        threadPocketCards[i] = new DeckStartingHand(threadDeck.getCardLike(pocketCards[i].card1), null);
                     }
                     else if (pocketCards[i].card1 == null && pocketCards[i].card2 != null) {
-                        threadPocketCards[i] = new PocketCards(null, threadDeck.getCardLike(pocketCards[i].card2));
+                        threadPocketCards[i] = new DeckStartingHand(null, threadDeck.getCardLike(pocketCards[i].card2));
                     }
                     else {
-                        threadPocketCards[i] = new PocketCards(
+                        threadPocketCards[i] = new DeckStartingHand(
                                 threadDeck.getCardLike(pocketCards[i].card1),
                                 threadDeck.getCardLike(pocketCards[i].card2));
                     }
@@ -213,15 +213,36 @@ class Assessment {
 
     /**
      * Frequently pocket cards of one player are known but the pocket cards of all other players shall be determined randomly for each iteration.
-     * Since the {@code assess} method requests an array of pocket hands, many methods need to create such an array based on one {@link PocketCards} object and a number of opponents.
+     * Since the {@code assess} method requests an array of pocket hands, many methods need to create such an array based on one {@link StartingHand} object and a number of opponents.
      * The function generates the array with null values for all opponent pocket cards (telling the {@code assess} method to randomly generate those).
      * @param player Pocket cards of the player.
      * @param opponents Number of opponents playing against the player.
-     * @return Array of {@link PocketCards} objects with null for all opponents and the first element being the passed player's pocket cards.
+     * @return Array of {@link StartingHand} objects with null for all opponents and the first element being the passed player's pocket cards.
      */
-    private static PocketCards[] onePlayerPocketCards(PocketCards player, int opponents) {
-        PocketCards[] pocketCards = new PocketCards[opponents + 1];
+    private static DeckStartingHand[] onePlayerPocketCards(DeckStartingHand player, int opponents) {
+        DeckStartingHand[] pocketCards = new DeckStartingHand[opponents + 1];
         pocketCards[0] = player;
         return pocketCards;
+    }
+
+    static StartingHandOutcome[][] getStartingHandsHeadsUp(int iterations) {
+        StartingHand[] allPockets1 = StartingHand.getAll(),
+                allPockets2 = StartingHand.getAll();
+
+        StartingHandOutcome[][] outcomes = new StartingHandOutcome[StartingHand.ALL_COUNT][StartingHand.ALL_COUNT];
+        for (int i = 0; i < StartingHand.ALL_COUNT; i++) {
+            System.out.println((double)i / StartingHand.ALL_COUNT); // progress
+            for (int j = 0; j < StartingHand.ALL_COUNT; j++) {
+                try {
+                    Deck deck = new Deck();
+                    DeckStartingHand pocket1 = deck.takeCardsLike(allPockets1[i]),
+                            pocket2 = deck.takeCardsLike(allPockets2[j]);
+                    outcomes[i][j] = new StartingHandOutcome(pocket1, Assessment.assess(deck, new DeckStartingHand[] { pocket1, pocket2 }, iterations)[0]);
+                } catch (DeckStateException e) {
+                    outcomes[i][j] = null; // combination not possible
+                }
+            }
+        }
+        return outcomes;
     }
 }
