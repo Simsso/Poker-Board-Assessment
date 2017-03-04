@@ -236,7 +236,7 @@ class Assessment {
         try {
             out.write("win\t".getBytes());
             for (int j = 0; j < StartingHand.ALL_COUNT; j++) {
-                    out.write((allPockets2[j] + "\t").getBytes());
+                    out.write(new String(allPockets2[j] + "\t").getBytes(StandardCharsets.UTF_8));
             }
             out.write("\n".getBytes());
         } catch (IOException e) {
