@@ -2,6 +2,9 @@ package com.timodenk.poker.boardassessment;
 
 import com.timodenk.poker.*;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -225,22 +228,45 @@ class Assessment {
         return pocketCards;
     }
 
-    static StartingHandOutcome[][] getStartingHandsHeadsUp(int iterations) {
+    static StartingHandOutcome[][] getStartingHandsHeadsUp(int iterations, OutputStream out, OutputStream status) {
+        long startNanos = System.nanoTime();
         StartingHand[] allPockets1 = StartingHand.getAll(),
                 allPockets2 = StartingHand.getAll();
 
+        try {
+            out.write("win\t".getBytes());
+            for (int j = 0; j < StartingHand.ALL_COUNT; j++) {
+                    out.write((allPockets2[j] + "\t").getBytes());
+            }
+            out.write("\n".getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         StartingHandOutcome[][] outcomes = new StartingHandOutcome[StartingHand.ALL_COUNT][StartingHand.ALL_COUNT];
         for (int i = 0; i < StartingHand.ALL_COUNT; i++) {
-            System.out.println((double)i / StartingHand.ALL_COUNT); // progress
-            for (int j = 0; j < StartingHand.ALL_COUNT; j++) {
-                try {
-                    Deck deck = new Deck();
-                    DeckStartingHand pocket1 = deck.takeCardsLike(allPockets1[i]),
-                            pocket2 = deck.takeCardsLike(allPockets2[j]);
-                    outcomes[i][j] = new StartingHandOutcome(pocket1, Assessment.assess(deck, new DeckStartingHand[] { pocket1, pocket2 }, iterations)[0]);
-                } catch (DeckStateException e) {
-                    outcomes[i][j] = null; // combination not possible
+            try {
+                if (i > 0) status.write(String.format("%04d %8.4fs hours remaining (%07.6f progress)\n", i, (System.nanoTime() - startNanos) / 1e9f / 3600.0 / i * (StartingHand.ALL_COUNT - i), (double)i / StartingHand.ALL_COUNT).getBytes()); // progress update
+                out.write((allPockets1[i] + "\t").getBytes());
+
+                for (int j = 0; j < StartingHand.ALL_COUNT; j++) {
+                    DeckStartingHand pocket1 = null, pocket2 = null;
+                    try {
+                        Deck deck = new Deck();
+                        pocket1 = deck.takeCardsLike(allPockets1[i]);
+                                pocket2 = deck.takeCardsLike(allPockets2[j]);
+                        outcomes[i][j] = new StartingHandOutcome(pocket1, Assessment.assess(deck, new DeckStartingHand[] { pocket1, pocket2 }, iterations)[0]);
+                        out.write(String.format("%9.8f", outcomes[i][j].getWinRate()).getBytes(StandardCharsets.UTF_8));
+                    } catch (DeckStateException e) {
+                        outcomes[i][j] = null; // combination not possible
+                        out.write("null".getBytes(StandardCharsets.UTF_8));
+                    }
+                    out.write("\t".getBytes(StandardCharsets.UTF_8));
                 }
+                out.write("\n".getBytes(StandardCharsets.UTF_8));
+            }
+            catch (IOException e) {
+                e.printStackTrace();
             }
         }
         return outcomes;

@@ -1,17 +1,32 @@
 package com.timodenk.poker.boardassessment;
 
+import java.io.*;
+
 public class Program {
     public static void main(String[] args) {
-        StartingHandOutcome[][] matrix = Assessment.getStartingHandsHeadsUp((args.length != 0) ? Integer.valueOf(args[0]) : 100);
-        for (StartingHandOutcome[] row : matrix) {
-            for (StartingHandOutcome outcome : row) {
-                if (outcome == null) {
-                    System.out.println("null");
-                }
-                else {
-                    System.out.println(outcome.getStartingHand() + ": " + outcome.getWinRate());
-                }
+        if (args.length == 0) {
+            System.out.println("First argument must be output file path.");
+            return;
+        }
+        File file = new File(args[0]);
+
+        try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
+            if (!file.exists()) {
+                file.createNewFile();
             }
+
+            // clear file
+            PrintWriter writer = new PrintWriter(file);
+            writer.print("");
+            writer.close();
+
+            Assessment.getStartingHandsHeadsUp((args.length > 1) ? Integer.valueOf(args[1]) : 119, fileOutputStream, System.out);
+
+            fileOutputStream.flush();
+            fileOutputStream.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
