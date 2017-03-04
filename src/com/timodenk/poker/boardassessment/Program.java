@@ -20,7 +20,7 @@ public class Program {
             writer.print("");
             writer.close();
 
-            Assessment.getStartingHandsHeadsUp((args.length > 1) ? Integer.valueOf(args[1]) : 119, fileOutputStream, System.out);
+            Assessment.getStartingHandsHeadsUp((args.length > 1) ? Integer.valueOf(args[1]) : 1000, fileOutputStream, System.out);
 
             fileOutputStream.flush();
             fileOutputStream.close();

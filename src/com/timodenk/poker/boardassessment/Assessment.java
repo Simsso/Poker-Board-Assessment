@@ -210,7 +210,7 @@ class Assessment {
         }
 
         // performance measurements
-        //System.out.printf("%9.4f µs (x%d hands)\n", (double)(System.nanoTime() - start) / 1e3 / Outcome.getCount(outcome), Outcome.getCount(outcome));
+        //System.out.printf("%9.4f e-6 s (x%d hands)\n", (double)(System.nanoTime() - start) / 1e3 / Outcome.getCount(outcome), Outcome.getCount(outcome));
         return outcome;
     }
 
@@ -245,25 +245,28 @@ class Assessment {
 
         StartingHandOutcome[][] outcomes = new StartingHandOutcome[StartingHand.ALL_COUNT][StartingHand.ALL_COUNT];
         for (int i = 0; i < StartingHand.ALL_COUNT; i++) {
-            try {
-                if (i > 0) status.write(String.format("%04d %8.4fs hours remaining (%07.6f progress)\n", i, (System.nanoTime() - startNanos) / 1e9f / 3600.0 / i * (StartingHand.ALL_COUNT - i), (double)i / StartingHand.ALL_COUNT).getBytes()); // progress update
-                out.write((allPockets1[i] + "\t").getBytes());
+            StringBuilder outputLineBuilder = new StringBuilder();
+            outputLineBuilder.append(allPockets1[i] + "\t");
 
-                for (int j = 0; j < StartingHand.ALL_COUNT; j++) {
-                    DeckStartingHand pocket1 = null, pocket2 = null;
-                    try {
-                        Deck deck = new Deck();
-                        pocket1 = deck.takeCardsLike(allPockets1[i]);
-                                pocket2 = deck.takeCardsLike(allPockets2[j]);
-                        outcomes[i][j] = new StartingHandOutcome(pocket1, Assessment.assess(deck, new DeckStartingHand[] { pocket1, pocket2 }, iterations)[0]);
-                        out.write(String.format("%9.8f", outcomes[i][j].getWinRate()).getBytes(StandardCharsets.UTF_8));
-                    } catch (DeckStateException e) {
-                        outcomes[i][j] = null; // combination not possible
-                        out.write("null".getBytes(StandardCharsets.UTF_8));
-                    }
-                    out.write("\t".getBytes(StandardCharsets.UTF_8));
+            Deck deck = new Deck();
+            for (int j = 0; j < StartingHand.ALL_COUNT; j++) {
+                deck.shuffle();
+                try {
+                    DeckStartingHand pocket1 = deck.takeCardsLike(allPockets1[i]),
+                            pocket2 = deck.takeCardsLike(allPockets2[j]);
+                    outcomes[i][j] = new StartingHandOutcome(pocket1, Assessment.assess(deck, new DeckStartingHand[] { pocket1, pocket2 }, iterations)[0]);
+                    outputLineBuilder.append(String.format("%9.8f", outcomes[i][j].getWinRate()));
+                } catch (DeckStateException e) {
+                    outcomes[i][j] = null; // combination not possible
+                    outputLineBuilder.append("null");
                 }
-                out.write("\n".getBytes(StandardCharsets.UTF_8));
+                outputLineBuilder.append("\t");
+            }
+            outputLineBuilder.append("\n");
+
+            try {
+                status.write(String.format("#%04d %8.4fh left (%07.6f done)\n", i, (System.nanoTime() - startNanos) / 1e9f / 3600.0 / (i + 1) * (StartingHand.ALL_COUNT - i - 1), (double)(i + 1) / StartingHand.ALL_COUNT).getBytes()); // progress update
+                out.write(outputLineBuilder.toString().getBytes(StandardCharsets.UTF_8));
             }
             catch (IOException e) {
                 e.printStackTrace();
