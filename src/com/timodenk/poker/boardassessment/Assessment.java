@@ -229,14 +229,14 @@ class Assessment {
     }
 
     static StartingHandOutcome[][] getStartingHandsHeadsUp(int iterations, OutputStream out, OutputStream status) {
-        long startNanos = System.nanoTime();
+        long startNanos = System.nanoTime(), doneCtr = 0, totalCount = (long)Math.pow(StartingHand.ALL_COUNT, 2);
         StartingHand[] allPockets1 = StartingHand.getAll(),
                 allPockets2 = StartingHand.getAll();
 
         try {
             out.write("win\t".getBytes());
             for (int j = 0; j < StartingHand.ALL_COUNT; j++) {
-                    out.write(new String(allPockets2[j] + "\t").getBytes(StandardCharsets.UTF_8));
+                out.write((allPockets2[j] + "\t").getBytes(StandardCharsets.UTF_8));
             }
             out.write("\n".getBytes());
         } catch (IOException e) {
@@ -246,18 +246,24 @@ class Assessment {
         StartingHandOutcome[][] outcomes = new StartingHandOutcome[StartingHand.ALL_COUNT][StartingHand.ALL_COUNT];
         for (int i = 0; i < StartingHand.ALL_COUNT; i++) {
             StringBuilder outputLineBuilder = new StringBuilder();
-            outputLineBuilder.append(allPockets1[i] + "\t");
+            outputLineBuilder.append(allPockets1[i]).append("\t");
 
             Deck deck = new Deck();
             for (int j = 0; j < StartingHand.ALL_COUNT; j++) {
                 deck.shuffle();
                 try {
-                    DeckStartingHand pocket1 = deck.takeCardsLike(allPockets1[i]),
-                            pocket2 = deck.takeCardsLike(allPockets2[j]);
-                    outcomes[i][j] = new StartingHandOutcome(pocket1, Assessment.assess(deck, new DeckStartingHand[] { pocket1, pocket2 }, iterations)[0]);
+                    if (outcomes[i][j] == null) {
+                        DeckStartingHand pocket1 = deck.takeCardsLike(allPockets1[i]),
+                                pocket2 = deck.takeCardsLike(allPockets2[j]);
+                        Outcome[] assessmentOutcomes = Assessment.assess(deck, new DeckStartingHand[]{pocket1, pocket2}, iterations);
+                        outcomes[i][j] = new StartingHandOutcome(pocket1, assessmentOutcomes[0]);
+                        outcomes[j][i] = new StartingHandOutcome(pocket2, assessmentOutcomes[1]);
+                        doneCtr += 2;
+                    }
                     outputLineBuilder.append(String.format("%9.8f", outcomes[i][j].getWinRate()));
                 } catch (DeckStateException e) {
                     outcomes[i][j] = null; // combination not possible
+                    doneCtr++;
                     outputLineBuilder.append("null");
                 }
                 outputLineBuilder.append("\t");
@@ -265,7 +271,10 @@ class Assessment {
             outputLineBuilder.append("\n");
 
             try {
-                status.write(String.format("#%04d %8.4fh left (%07.6f done)\n", i, (System.nanoTime() - startNanos) / 1e9f / 3600.0 / (i + 1) * (StartingHand.ALL_COUNT - i - 1), (double)(i + 1) / StartingHand.ALL_COUNT).getBytes()); // progress update
+                // progress update
+                status.write(String.format("#%04d %8.4fh left (%07.6f done)\n", i + 1, (System.nanoTime() - startNanos) / 1e9f / 3600.0 / doneCtr * (totalCount - doneCtr), (double)doneCtr / totalCount).getBytes(StandardCharsets.UTF_8));
+
+                // log output
                 out.write(outputLineBuilder.toString().getBytes(StandardCharsets.UTF_8));
             }
             catch (IOException e) {
