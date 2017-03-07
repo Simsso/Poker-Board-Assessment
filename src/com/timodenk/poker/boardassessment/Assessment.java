@@ -229,8 +229,8 @@ class Assessment {
         long startNanos = System.nanoTime(),
                 doneCtr = 0,
                 computationsCtr = 0; // number of Assessment.assess calls (where a situation is actually simulated, not deduced from equivalent situations)
-        final long TOTAL_COUNT = (long)Math.pow(StartingHand.ALL_COUNT, 2),
-                TOTAL_COMPUTATIONS_COUNT = 47008;
+        final long TOTAL_COUNT = (long)Math.pow(StartingHand.ALL_COUNT, 2), // number of matrix cells
+                TOTAL_COMPUTATIONS_COUNT = 47008; // number of required computations to fill the matrix (total Assessment.assess calls)
 
         StartingHand[] allPockets1 = StartingHand.getAll(),
                 allPockets2 = StartingHand.getAll();
@@ -280,6 +280,7 @@ class Assessment {
                             // both fields must be null at this point
                             outcomes[index1][index2] = outcome1;
                             outcomes[index2][index1] = outcome2;
+                            doneCtr += 2;
                         }
                     }
                     outputLineBuilder.append(String.format("%9.8f", outcomes[i][j].getWinRate()));
