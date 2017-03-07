@@ -1,5 +1,8 @@
 package com.timodenk.poker;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Utility class (static.
  * Contains several static methods which are used in poker functions.
@@ -38,4 +41,37 @@ class Util {
         }
         return b;
     }
+
+    static Suit[][] permute(Suit[] arr) {
+        List<Suit[]> list = permute(arr, 0);
+        Suit[][] array = new Suit[list.size()][];
+        for (int i = 0; i < list.size(); i++) {
+            array[i] = list.get(i);
+        }
+        return array;
+    }
+
+    /**
+     * Taken from SO answer http://stackoverflow.com/a/14444037/3607984
+     */
+    private static List<Suit[]> permute(Suit[] arr, int k) {
+        List<Suit[]> result = new ArrayList<>();
+        for(int i = k; i < arr.length; i++) {
+            swapArrayElements(arr, i, k);
+            result.addAll(permute(arr, k + 1));
+            swapArrayElements(arr, k, i);
+        }
+        if (k == arr.length -1) {
+            result.add(arr.clone());
+        }
+        return result;
+    }
+
+    static void swapArrayElements(Suit[] suit, int i, int j) {
+        Suit tmp = suit[i];
+        suit[i] = suit[j];
+        suit[j] = tmp;
+    }
+
+
 }

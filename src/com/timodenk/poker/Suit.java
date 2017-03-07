@@ -27,4 +27,21 @@ public enum Suit {
     public String toString() {
         return String.valueOf(this.shortForm);
     }
+
+    public Suit getPermutation(Suit[] permutation) {
+        Suit[] base = Suit.values();
+        if (permutation.length != base.length) {
+            throw new IllegalArgumentException("Permutation array must have length 4");
+        }
+        for (int i = 0; i < base.length; i++) {
+            if (base[i] == this) {
+                return permutation[i];
+            }
+        }
+        throw new IllegalArgumentException("Could not apply permutation");
+    }
+
+    public static Suit[][] getPermutations() {
+        return Util.permute(Suit.values());
+    }
 }

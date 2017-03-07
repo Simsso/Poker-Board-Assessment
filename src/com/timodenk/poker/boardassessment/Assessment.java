@@ -5,10 +5,7 @@ import com.timodenk.poker.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -229,7 +226,12 @@ class Assessment {
     }
 
     static StartingHandOutcome[][] getStartingHandsHeadsUp(int iterations, OutputStream out, OutputStream status) {
-        long startNanos = System.nanoTime(), doneCtr = 0, totalCount = (long)Math.pow(StartingHand.ALL_COUNT, 2);
+        long startNanos = System.nanoTime(),
+                doneCtr = 0,
+                computationsCtr = 0; // number of Assessment.assess calls (where a situation is actually simulated, not deduced from equivalent situations)
+        final long TOTAL_COUNT = (long)Math.pow(StartingHand.ALL_COUNT, 2),
+                TOTAL_COMPUTATIONS_COUNT = 47008;
+
         StartingHand[] allPockets1 = StartingHand.getAll(),
                 allPockets2 = StartingHand.getAll();
 
@@ -256,9 +258,29 @@ class Assessment {
                         DeckStartingHand pocket1 = deck.takeCardsLike(allPockets1[i]),
                                 pocket2 = deck.takeCardsLike(allPockets2[j]);
                         Outcome[] assessmentOutcomes = Assessment.assess(deck, new DeckStartingHand[]{pocket1, pocket2}, iterations);
+                        computationsCtr++;
                         outcomes[i][j] = new StartingHandOutcome(pocket1, assessmentOutcomes[0]);
-                        outcomes[j][i] = new StartingHandOutcome(pocket2, assessmentOutcomes[1]);
                         doneCtr += 2;
+
+                        // this field (j,i) must be null here
+                        outcomes[j][i] = new StartingHandOutcome(pocket2, assessmentOutcomes[1]);
+
+                        // log all permutations (exact same outcome)
+                        StartingHand[][] permutations = StartingHand.getPermutations(pocket1, pocket2);
+                        for (StartingHand[] permutation : permutations) {
+                            if (permutation[0].equals(pocket1) && permutation[1].equals(pocket2)) {
+                                continue;
+                            }
+
+                            StartingHandOutcome outcome1 = new StartingHandOutcome(permutation[0], assessmentOutcomes[0]),
+                                    outcome2 = new StartingHandOutcome(permutation[1], assessmentOutcomes[1]);
+                            int index1 = getIndex(allPockets1, outcome1.getStartingHand()),
+                                    index2 = getIndex(allPockets2, outcome2.getStartingHand());
+
+                            // both fields must be null at this point
+                            outcomes[index1][index2] = outcome1;
+                            outcomes[index2][index1] = outcome2;
+                        }
                     }
                     outputLineBuilder.append(String.format("%9.8f", outcomes[i][j].getWinRate()));
                 } catch (DeckStateException e) {
@@ -272,7 +294,11 @@ class Assessment {
 
             try {
                 // progress update
-                status.write(String.format("#%04d %8.4fh left (%07.6f done)\n", i + 1, (System.nanoTime() - startNanos) / 1e9f / 3600.0 / doneCtr * (totalCount - doneCtr), (double)doneCtr / totalCount).getBytes(StandardCharsets.UTF_8));
+                status.write(String.format(
+                        "#%04d %8.4fh left (%07.6f done)\n",
+                        i + 1,
+                        (System.nanoTime() - startNanos) / 1e9f / 3600.0 / computationsCtr * (TOTAL_COMPUTATIONS_COUNT - computationsCtr),
+                        (double)doneCtr / TOTAL_COUNT).getBytes(StandardCharsets.UTF_8));
 
                 // log output
                 out.write(outputLineBuilder.toString().getBytes(StandardCharsets.UTF_8));
@@ -282,5 +308,14 @@ class Assessment {
             }
         }
         return outcomes;
+    }
+
+    private static int getIndex(StartingHand[] array, StartingHand startingHand) {
+        for (int i = 0; i < array.length; i++) {
+            if (startingHand.equals(array[i])) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

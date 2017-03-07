@@ -23,6 +23,10 @@ public class Card implements Comparable<Card> {
         return this.rank == card.rank && this.suit == card.suit;
     }
 
+    public Card getPermutation(Suit[] permutation) {
+        return new Card(this.rank, this.suit.getPermutation(permutation));
+    }
+
     /**
      * One card can be compared to another card based on the card's ranks.
      *

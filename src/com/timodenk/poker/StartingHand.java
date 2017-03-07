@@ -1,5 +1,8 @@
 package com.timodenk.poker;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * The {@link StartingHand} class contains two {@link Card}s.
  * For some applications both cards should be taken from the same {@link Deck}.
@@ -32,6 +35,10 @@ public class StartingHand {
      */
     public boolean isPair() {
         return card1.rank == card2.rank;
+    }
+
+    public StartingHand getPermutation(Suit[] permutation) {
+        return new StartingHand(this.card1.getPermutation(permutation), this.card2.getPermutation(permutation));
     }
 
     /**
@@ -94,5 +101,73 @@ public class StartingHand {
             }
         }
         return pocketCards;
+    }
+
+    public static boolean playable(StartingHand... startingHands) {
+        Deck deck = new Deck();
+        try {
+            for (StartingHand startingHand : startingHands) {
+                    deck.takeCardLike(startingHand.card1);
+                deck.takeCardLike(startingHand.card2);
+            }
+        } catch (DeckStateException e) {
+            return false;
+        }
+        return true;
+    }
+
+    public static StartingHand[][] getPermutations(StartingHand... startingHands) {
+        List<StartingHand[]> permutations = new ArrayList<StartingHand[]>();
+        Suit[][] suitPermutations = Suit.getPermutations();
+        for (Suit[] suitPermutation : suitPermutations) {
+            StartingHand[] permutation = new StartingHand[startingHands.length];
+            for (int i = 0; i < startingHands.length; i++) {
+                permutation[i] = startingHands[i].getPermutation(suitPermutation);
+            }
+            permutations.add(permutation);
+        }
+
+        // remove duplicates and non playable cards
+        for (int i = 0; i < permutations.size(); i++) {
+            if (!StartingHand.playable(permutations.get(i))) {
+                permutations.remove(i);
+                i--;
+                continue;
+            }
+
+            // search for duplicates in following entries
+            for (int j = i + 1; j < permutations.size(); j++) {
+                boolean allContained = true;
+
+                // check all duplicate starting hands
+                for (int k = 0; k < permutations.get(i).length; k++) {
+                    boolean matchFound = false;
+                    // compare with all potential duplicate starting hands
+                    for (int l = 0; l < permutations.get(i).length; l++) {
+                        if (permutations.get(i)[k].equals(permutations.get(j)[l])) {
+                            matchFound = true;
+                        }
+                    }
+                    if (!matchFound) {
+                        allContained = false;
+                    }
+                }
+                if (allContained) {
+                    permutations.remove(j);
+                    j--;
+                }
+            }
+        }
+        StartingHand[][] output = new StartingHand[permutations.size()][];
+        for (int i = 0; i < permutations.size(); i++) {
+            output[i] = permutations.get(i);
+        }
+        return output;
+    }
+
+    public boolean equals(StartingHand h) {
+        boolean sameOrder = this.card1.equals(h.card1) && this.card2.equals(h.card2),
+            mixed = this.card1.equals(h.card2) && this.card2.equals(h.card1);
+        return sameOrder || mixed;
     }
 }
