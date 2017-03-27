@@ -1,73 +1,69 @@
 package com.timodenk.poker.boardassessment;
 
 import com.timodenk.poker.CommunityCards;
-import com.timodenk.poker.Hand;
-import com.timodenk.poker.Poker;
 import com.timodenk.poker.StartingHand;
 
-public class StartingHandAnalysis {
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.*;
+
+class StartingHandAnalysis {
+    private static final int THREAD_COUNT = 12; // number of threads
+
     static void start() {
         CommunityCards[] allCommunityCardCombinations = CommunityCards.getAllCombinations();
         StartingHand[] startingHands = StartingHand.getAll();
 
         StartingHandOutcome[] outcomes = new StartingHandOutcome[startingHands.length];
         for (int i = 0; i < outcomes.length; i++) {
-            outcomes[i] = new StartingHandOutcome(startingHands[i]);
+            outcomes[i] = new StartingHandOutcome(startingHands[i]); // init outcome objects
         }
 
-        // loop over all community card combinations
-        for (CommunityCards communityCards : allCommunityCardCombinations) {
+        // start threads
+        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT, new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r);
 
-            // array of hands that the starting hands build with the current community cards
-            Hand[] hands = new Hand[StartingHand.ALL_COUNT];
+                // these threads may not prevent the JVM from exiting
+                t.setDaemon(true);
+                return t;
+            }
+        });
 
-            // loop over all starting hands
-            for (int i = 0; i < StartingHand.ALL_COUNT; i++) {
+        Set<Callable<StartingHandOutcome[]>> outcomesCallableSet = new HashSet<Callable<StartingHandOutcome[]>>();
 
-                StartingHand startingHand = startingHands[i];
-                if (StartingHand.playable(startingHand, communityCards)) {
-                    hands[i] = Poker.getBestHand(communityCards, startingHands[i]);
-                }
-                else {
-                    hands[i] = null;
+        for (int threadId = 0, communityIndex = 0; threadId < THREAD_COUNT; threadId++) {
+            int communitiesCount = allCommunityCardCombinations.length / THREAD_COUNT  +
+                    ((threadId < THREAD_COUNT - 1) ? 0 : (allCommunityCardCombinations.length % THREAD_COUNT));
+            outcomesCallableSet.add(
+                    new StartingHandAnalysisCallable(
+                            threadId,
+                            Arrays.copyOfRange(
+                                    allCommunityCardCombinations, communityIndex, communityIndex + communitiesCount),
+                            startingHands));
+            communityIndex += communitiesCount;
+        }
+
+        try {
+            List<Future<StartingHandOutcome[]>> futures = executorService.invokeAll(outcomesCallableSet);
+
+            for (Future<StartingHandOutcome[]> threadOutcomeFuture : futures) {
+                StartingHandOutcome[] threadOutcome = threadOutcomeFuture.get();
+                for (int i = 0; i < startingHands.length; i++) {
+                    outcomes[i].merge(threadOutcome[i]);
                 }
             }
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        } finally {
+            executorService.shutdown();
+        }
 
-            // analyze and update outcomes
-            for (int i = 0; i < StartingHand.ALL_COUNT; i++) {
-                Hand handI = hands[i]; // hand that starting hand i builds with the community cards
-                if (handI == null) {
-                    continue;
-                }
-                for (int j = i + 1; j < StartingHand.ALL_COUNT; j++) {
-                    Hand handJ = hands[j]; // hand that starting hand i builds with the community cards
-                    if (handJ == null) {
-                        continue;
-                    }
-
-                    // check if i can play vs j on the board
-                    if (!StartingHand.playable(new StartingHand[] { startingHands[i], startingHands[j] }, communityCards)) {
-                        continue;
-                    }
-
-                    // check the outcome for i vs j
-
-                    int comparison = handI.compareTo(handJ);
-                    if (comparison > 0) {
-                        outcomes[i].addWin(handI);
-                        outcomes[j].addLoss(handJ);
-                    }
-                    else if (comparison < 0) {
-                        outcomes[i].addLoss(handI);
-                        outcomes[j].addWin(handJ);
-                    }
-                    else {
-                        outcomes[i].addSplit(handI);
-                        outcomes[j].addSplit(handJ);
-                    }
-                }
-            }
-            System.out.println(communityCards);
+        for (StartingHandOutcome outcome : outcomes) {
+            System.out.println(outcome);
         }
     }
 }

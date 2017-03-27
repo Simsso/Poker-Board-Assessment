@@ -18,7 +18,7 @@ import java.util.concurrent.*;
  */
 class Assessment {
 
-    public static final int THREAD_COUNT = 12, // number of threads
+    private static final int THREAD_COUNT = 12, // number of threads
             DEFAULT_ITERATIONS = 10000; // number of default iterations per game situation
 
     /**
