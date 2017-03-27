@@ -8,8 +8,10 @@ import java.util.Random;
  * A deck of cards. Used to keep track of which cards are available (e.g. for community cards).
  */
 public class Deck {
-    // all cards n = 52
+    // all cards n = CARDS_COUNT
     private final DeckCard[] cards;
+
+    static final int CARDS_COUNT = 52;
 
     // all cards that are still available (not distributed)
     private ArrayList<DeckCard> availableCards;
@@ -22,7 +24,7 @@ public class Deck {
      * A {@link Deck} with all 52 card that a standard 52-card deck contains.
      */
     public Deck() {
-        this.cards = new DeckCard[52];
+        this.cards = new DeckCard[CARDS_COUNT];
 
         int i = 0;
         for (Suit suit : Suit.values()) {
@@ -32,7 +34,7 @@ public class Deck {
             }
         }
 
-        this.shuffle();
+        this.shuffle(); // initializes the available cards array
     }
 
     /**
@@ -42,6 +44,12 @@ public class Deck {
     public void takeCards(DeckCard... cards) {
         for (DeckCard card : cards) {
             this.availableCards.remove(card);
+        }
+    }
+
+    public void takeCards(Card... cards) throws DeckStateException {
+        for (Card card : cards) {
+            this.takeCard(card);
         }
     }
 
@@ -57,7 +65,7 @@ public class Deck {
      * @return A random card which is not distributed.
      * @throws DeckStateException Thrown e.g. if no more cards are avialable on the deck.
      */
-    public DeckCard getNextCard() throws DeckStateException {
+    public DeckCard takeNextCard() throws DeckStateException {
         if (this.availableCards.size() == 0) {
             throw new DeckStateException("All cards have been taken already.");
         }
@@ -73,10 +81,10 @@ public class Deck {
      * @return The taken cards.
      * @throws DeckStateException Thrown e.g. if there are not enough cards available.
      */
-    public DeckCard[] getNCards(int n) throws DeckStateException {
+    public DeckCard[] takeNCards(int n) throws DeckStateException {
         DeckCard[] cards = new DeckCard[n];
         for (int i = 0; i < n; i++) {
-            cards[i] = getNextCard();
+            cards[i] = takeNextCard();
         }
         return cards;
     }
@@ -114,12 +122,16 @@ public class Deck {
         throw new DeckStateException(rank, suit);
     }
 
-    public DeckCard takeCardLike(Card card) throws DeckStateException {
+    DeckCard takeCard(Card card) throws DeckStateException {
         return takeCard(card.rank, card.suit);
     }
 
-    public DeckStartingHand takeCardsLike(StartingHand startingHand) throws DeckStateException {
-        return new DeckStartingHand(this.takeCardLike(startingHand.card1), this.takeCardLike(startingHand.card2));
+    public DeckStartingHand takeCard(StartingHand startingHand) throws DeckStateException {
+        return new DeckStartingHand(this.takeCard(startingHand.card1), this.takeCard(startingHand.card2));
+    }
+
+    Card getNthCard(int n) {
+        return this.cards[n];
     }
 
     /**

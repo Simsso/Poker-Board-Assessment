@@ -129,7 +129,7 @@ class AssessmentCallable implements Callable<Outcome[]> {
         for (int i = 0; i < playerCount; i++) {
             DeckCard card1, card2;
             if (startingHandsInitial[i].card1 == null) {
-                card1 = deck.getNextCard();
+                card1 = deck.takeNextCard();
             }
             else {
                 card1 = startingHandsInitial[i].card1;
@@ -137,7 +137,7 @@ class AssessmentCallable implements Callable<Outcome[]> {
             }
 
             if (startingHandsInitial[i].card2 == null) {
-                card2 = deck.getNextCard();
+                card2 = deck.takeNextCard();
             }
             else {
                 card2 = startingHandsInitial[i].card2;
@@ -156,7 +156,7 @@ class AssessmentCallable implements Callable<Outcome[]> {
         deck.takeCards(communityCardsInitial); // community cards can not be taken by other players
         for (int i = 0; i < 5; i++) {
             if (!(i < communityCardsInitial.length) || communityCardsInitial[i] == null) {
-                this.communityCards[i] = deck.getNextCard();
+                this.communityCards[i] = deck.takeNextCard();
             }
             else {
                 this.communityCards[i] = communityCardsInitial[i];

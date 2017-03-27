@@ -22,6 +22,6 @@ public class DeckStartingHand extends StartingHand {
     }
 
     public DeckStartingHand(final Deck deck, final Card paramCard1, Card paramCard2) throws DeckStateException {
-        this(deck.takeCardLike(paramCard1), deck.takeCardLike(paramCard2));
+        this(deck.takeCard(paramCard1), deck.takeCard(paramCard2));
     }
 }

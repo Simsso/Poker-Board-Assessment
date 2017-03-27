@@ -107,9 +107,27 @@ public class StartingHand {
         Deck deck = new Deck();
         try {
             for (StartingHand startingHand : startingHands) {
-                    deck.takeCardLike(startingHand.card1);
-                deck.takeCardLike(startingHand.card2);
+                deck.takeCard(startingHand.card1);
+                deck.takeCard(startingHand.card2);
             }
+        } catch (DeckStateException e) {
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean playable(StartingHand startingHand, CommunityCards communityCards) {
+        return playable(new StartingHand[] { startingHand }, communityCards);
+    }
+
+    public static boolean playable(StartingHand[] startingHands, CommunityCards communityCards) {
+        Deck deck = new Deck();
+        try {
+            for (StartingHand startingHand : startingHands) {
+                deck.takeCard(startingHand.card1);
+                deck.takeCard(startingHand.card2);
+            }
+            deck.takeCards(communityCards.getAll());
         } catch (DeckStateException e) {
             return false;
         }

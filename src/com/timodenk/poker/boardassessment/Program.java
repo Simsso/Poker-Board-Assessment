@@ -1,14 +1,19 @@
 package com.timodenk.poker.boardassessment;
 
-import com.timodenk.poker.Card;
-import com.timodenk.poker.Rank;
-import com.timodenk.poker.StartingHand;
-import com.timodenk.poker.Suit;
+import com.timodenk.poker.*;
 
 import java.io.*;
 
 public class Program {
     public static void main(String[] args) {
+        StartingHandAnalysis.start();
+        if (true) return;
+
+        System.out.println("Starting");
+        CommunityCards[] cards = CommunityCards.getAllCombinations();
+        System.out.println("Done");
+
+
         if (args.length == 0) {
             System.out.println("First argument must be output file path.");
             return;

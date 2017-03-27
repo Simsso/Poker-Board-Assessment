@@ -255,8 +255,8 @@ class Assessment {
                 deck.shuffle();
                 try {
                     if (outcomes[i][j] == null) {
-                        DeckStartingHand pocket1 = deck.takeCardsLike(allPockets1[i]),
-                                pocket2 = deck.takeCardsLike(allPockets2[j]);
+                        DeckStartingHand pocket1 = deck.takeCard(allPockets1[i]),
+                                pocket2 = deck.takeCard(allPockets2[j]);
                         Outcome[] assessmentOutcomes = Assessment.assess(deck, new DeckStartingHand[]{pocket1, pocket2}, iterations);
                         computationsCtr++;
                         outcomes[i][j] = new StartingHandOutcome(pocket1, assessmentOutcomes[0]);

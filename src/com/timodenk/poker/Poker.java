@@ -1,5 +1,7 @@
 package com.timodenk.poker;
 
+import com.sun.deploy.util.ArrayUtil;
+
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -21,6 +23,10 @@ public class Poker {
         }
         Arrays.sort(hands, Collections.reverseOrder()); // descending (best hand first)
         return hands[0]; // best Hand
+    }
+
+    public static Hand getBestHand(CommunityCards communityCards, StartingHand pocketCards) {
+        return getBestHand(communityCards.getAllAndAppend(pocketCards));
     }
 
     /**
