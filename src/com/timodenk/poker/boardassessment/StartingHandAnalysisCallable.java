@@ -5,17 +5,21 @@ import com.timodenk.poker.Hand;
 import com.timodenk.poker.Poker;
 import com.timodenk.poker.StartingHand;
 
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 
 class StartingHandAnalysisCallable implements Callable<StartingHandOutcome[]> {
     private CommunityCards[] communityCardsCombinations;
     private StartingHand[] startingHands;
     private final int internalThreadID;
+    private final OutputStream log;
 
-    StartingHandAnalysisCallable(int internalThreadID, CommunityCards[] communityCardsCombinations, StartingHand[] startingHands) {
+    StartingHandAnalysisCallable(int internalThreadID, CommunityCards[] communityCardsCombinations, StartingHand[] startingHands, OutputStream log) {
         this.communityCardsCombinations = communityCardsCombinations;
         this.startingHands = startingHands;
         this.internalThreadID = internalThreadID;
+        this.log = log;
     }
 
     @Override
@@ -29,10 +33,13 @@ class StartingHandAnalysisCallable implements Callable<StartingHandOutcome[]> {
         int ctr = 0;
         // loop over all community card combinations
         for (CommunityCards communityCards : communityCardsCombinations) {
-            System.out.println(String.format("Process %3d: %6f (%4f hours remaining)",
-                    internalThreadID,
-                    (++ctr) / (float)communityCardsCombinations.length,
-                    (double)(System.nanoTime() - startTime) / 1e9 / 3600 / ctr * communityCardsCombinations.length));
+            if (++ctr % 1000 == 0) {
+                log.write((String.format("Thread %3d: %6f (%4f hours remaining)",
+                        internalThreadID,
+                        (ctr) / (float) communityCardsCombinations.length,
+                        (double) (System.nanoTime() - startTime) / 1e9 / 3600 / ctr * communityCardsCombinations.length) + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
+            }
+
             // array of hands that the starting hands build with the current community cards
             Hand[] hands = new Hand[StartingHand.ALL_COUNT];
 

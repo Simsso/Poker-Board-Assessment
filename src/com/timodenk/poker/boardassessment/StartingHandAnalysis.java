@@ -3,6 +3,9 @@ package com.timodenk.poker.boardassessment;
 import com.timodenk.poker.CommunityCards;
 import com.timodenk.poker.StartingHand;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -12,7 +15,7 @@ import java.util.concurrent.*;
 class StartingHandAnalysis {
     private static final int THREAD_COUNT = 12; // number of threads
 
-    static void start() {
+    static void start(OutputStream out, OutputStream log) {
         CommunityCards[] allCommunityCardCombinations = CommunityCards.getAllCombinations();
         StartingHand[] startingHands = StartingHand.getAll();
 
@@ -43,7 +46,8 @@ class StartingHandAnalysis {
                             threadId,
                             Arrays.copyOfRange(
                                     allCommunityCardCombinations, communityIndex, communityIndex + communitiesCount),
-                            startingHands));
+                            startingHands,
+                            log));
             communityIndex += communitiesCount;
         }
 
@@ -63,7 +67,11 @@ class StartingHandAnalysis {
         }
 
         for (StartingHandOutcome outcome : outcomes) {
-            System.out.println(outcome);
+            try {
+                out.write((outcome.toString() + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

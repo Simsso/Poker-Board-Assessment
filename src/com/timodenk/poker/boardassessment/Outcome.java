@@ -169,7 +169,7 @@ class Outcome {
      */
     @Override
     public String toString() {
-        return "Win " + String.format("%6d", getWinCount()) + " \tSplit " + String.format("%6d", getSplitCount()) + " \tTotal " + String.format("%6d", getCount());
+        return "Win " + String.format("%8d", getWinCount()) + " \tSplit " + String.format("%8d", getSplitCount()) + " \tTotal " + String.format("%8d", getCount());
     }
 
     /**
