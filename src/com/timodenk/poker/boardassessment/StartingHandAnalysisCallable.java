@@ -41,10 +41,8 @@ class StartingHandAnalysisCallable implements Callable<Outcome[][]> {
                 log.write((String.format("Thread %2d: %7f (%4f hours remaining)",
                     internalThreadID,
                     (ctr) / (float) communityCardsCombinations.length,
-                    (double) (System.nanoTime() - startTime) / 1e9 / 3600 / ctr * (10 - ctr)) + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
+                    (double) (System.nanoTime() - startTime) / 1e9 / 3600 / ctr * (communityCardsCombinations.length - ctr)) + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
             }
-
-            if (ctr == 10) break;
 
             // array of hands that the starting hands build with the current community cards
             Hand[] hands = new Hand[StartingHand.ALL_COUNT];
