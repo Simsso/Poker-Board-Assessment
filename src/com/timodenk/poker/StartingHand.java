@@ -103,7 +103,7 @@ public class StartingHand {
         return pocketCards;
     }
 
-    public static boolean playable(StartingHand... startingHands) {
+    static boolean playable(StartingHand... startingHands) {
         Deck deck = new Deck();
         try {
             for (StartingHand startingHand : startingHands) {
@@ -121,6 +121,18 @@ public class StartingHand {
     }
 
     public static boolean playable(StartingHand[] startingHands, CommunityCards communityCards) {
+        // quick way (assumes that the board is valid and the starting hand is valid)
+        if (startingHands.length == 1) {
+            Card[] communityArray = communityCards.getAll();
+            for (int i = 0; i < communityArray.length; i++) {
+                if (communityArray[i].equals(startingHands[0].card1) || communityArray[i].equals(startingHands[0].card2)) {
+                    return false;
+                }
+            }
+            return !(startingHands[0].card1.equals(startingHands[0].card2));
+        }
+
+
         Deck deck = new Deck();
         try {
             for (StartingHand startingHand : startingHands) {
@@ -132,6 +144,11 @@ public class StartingHand {
             return false;
         }
         return true;
+    }
+
+    // checks whether two valid starting hands (not the same card contained) are playable against each other
+    public static boolean validHandsPlayable(StartingHand hand1, StartingHand hand2) {
+        return !(hand1.card1.equals(hand2.card1) || hand1.card1.equals(hand2.card2) || hand1.card2.equals(hand2.card1) || hand1.card2.equals(hand2.card2));
     }
 
     public static StartingHand[][] getPermutations(StartingHand... startingHands) {

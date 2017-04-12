@@ -13,15 +13,19 @@ import java.util.Set;
 import java.util.concurrent.*;
 
 class StartingHandAnalysis {
-    private static final int THREAD_COUNT = 12; // number of threads
+    private static final int THREAD_COUNT = 8; // number of threads
 
     static void start(OutputStream out, OutputStream log) {
         CommunityCards[] allCommunityCardCombinations = CommunityCards.getAllCombinations();
         StartingHand[] startingHands = StartingHand.getAll();
 
-        StartingHandOutcome[] outcomes = new StartingHandOutcome[startingHands.length];
-        for (int i = 0; i < outcomes.length; i++) {
-            outcomes[i] = new StartingHandOutcome(startingHands[i]); // init outcome objects
+        Outcome[][] outcomes = new Outcome[startingHands.length][startingHands.length];
+        for (int i = 0; i < outcomes.length; i++) { // init outcome array
+            for (int j = 0; j < outcomes.length; j++) {
+                // matrix contains results
+                // row plays against column
+                outcomes[i][j] = new Outcome(false);
+            }
         }
 
         // start threads
@@ -36,7 +40,7 @@ class StartingHandAnalysis {
             }
         });
 
-        Set<Callable<StartingHandOutcome[]>> outcomesCallableSet = new HashSet<Callable<StartingHandOutcome[]>>();
+        Set<Callable<Outcome[][]>> outcomesCallableSet = new HashSet<>();
 
         for (int threadId = 0, communityIndex = 0; threadId < THREAD_COUNT; threadId++) {
             int communitiesCount = allCommunityCardCombinations.length / THREAD_COUNT  +
@@ -51,13 +55,22 @@ class StartingHandAnalysis {
             communityIndex += communitiesCount;
         }
 
-        try {
-            List<Future<StartingHandOutcome[]>> futures = executorService.invokeAll(outcomesCallableSet);
+        allCommunityCardCombinations = null; // not required anymore
 
-            for (Future<StartingHandOutcome[]> threadOutcomeFuture : futures) {
-                StartingHandOutcome[] threadOutcome = threadOutcomeFuture.get();
+        // free up community card combinations array memory
+        Runtime r = Runtime.getRuntime();
+        r.gc();
+
+        try {
+            List<Future<Outcome[][]>> futures = executorService.invokeAll(outcomesCallableSet);
+
+            for (Future<Outcome[][]> threadOutcomeFuture : futures) {
+                Outcome[][] threadOutcome = threadOutcomeFuture.get();
+
                 for (int i = 0; i < startingHands.length; i++) {
-                    outcomes[i].merge(threadOutcome[i]);
+                    for (int j = 0; j < startingHands.length; j++) {
+                        outcomes[i][j].merge(threadOutcome[i][j]);
+                    }
                 }
             }
         } catch (InterruptedException | ExecutionException e) {
@@ -66,9 +79,27 @@ class StartingHandAnalysis {
             executorService.shutdown();
         }
 
-        for (StartingHandOutcome outcome : outcomes) {
+        try {
+            out.write("\t".getBytes(StandardCharsets.UTF_8));
+            for (int i = 0; i < outcomes.length; i++) {
+                out.write((startingHands[i].toString() + "\t\t").getBytes(StandardCharsets.UTF_8));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        for (int i = 0; i < outcomes.length; i++) {
             try {
-                out.write((outcome.toString() + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
+                StringBuilder outputLine = new StringBuilder();
+                outputLine.append(startingHands[i].toString());
+                for (int j = 0; j < outcomes[i].length; j++) {
+                    outputLine.append("\t" + outcomes[i][j].toValueString());
+                }
+
+                if (i != outcomes.length - 1)
+                    outputLine.append(System.lineSeparator());
+
+                out.write(outputLine.toString().getBytes(StandardCharsets.UTF_8));
             } catch (IOException e) {
                 e.printStackTrace();
             }

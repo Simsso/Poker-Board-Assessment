@@ -54,4 +54,8 @@ class StartingHandOutcome extends Outcome {
     public String toString() {
         return this.startingHand.toString() + " " + super.toString();
     }
+
+    public String toOutcomeString() {
+        return super.toString();
+    }
 }

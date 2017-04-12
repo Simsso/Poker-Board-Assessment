@@ -1,7 +1,5 @@
 package com.timodenk.poker;
 
-import com.sun.deploy.util.ArrayUtil;
-
 import java.util.Arrays;
 import java.util.Collections;
 

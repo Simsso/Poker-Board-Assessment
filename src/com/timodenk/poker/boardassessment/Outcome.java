@@ -13,16 +13,25 @@ class Outcome {
     private long win, split, loss;
 
     // counter for win, split, and loss with respect to the hand that lead to the win/split/loss.
-    private long[] handWinCount = new long[HandName.values().length],
-            handSplitCount = new long[HandName.values().length],
-            handLossCount = new long[HandName.values().length];
+    private long[] handWinCount, handSplitCount, handLossCount;
+
+    private final boolean handCount;
 
     /**
      * Default constructor for blank Outcome object.
      * All count values will be equal to 0.
      */
     Outcome() {
+        this(true);
+    }
 
+    Outcome(boolean handCount) {
+        if (handCount) {
+            this.handWinCount = new long[HandName.values().length];
+            this.handSplitCount = new long[HandName.values().length];
+            this.handLossCount = new long[HandName.values().length];
+        }
+        this.handCount = handCount;
     }
 
     /**
@@ -32,6 +41,7 @@ class Outcome {
      * @param loss Number of losses.
      */
     Outcome(long win, long split, long loss) {
+        this(false);
         this.win = win;
         this.split = split;
         this.loss = loss;
@@ -43,7 +53,8 @@ class Outcome {
      */
     void addWin(Hand hand) {
         this.win++;
-        handWinCount[hand.name.ordinal()]++;
+        if (this.handCount)
+            handWinCount[hand.name.ordinal()]++;
     }
 
     /**
@@ -52,7 +63,8 @@ class Outcome {
      */
     void addSplit(Hand hand) {
         this.split++;
-        handSplitCount[hand.name.ordinal()]++;
+        if (this.handCount)
+            handSplitCount[hand.name.ordinal()]++;
     }
 
     /**
@@ -61,7 +73,8 @@ class Outcome {
      */
     void addLoss(Hand hand) {
         this.loss++;
-        handLossCount[hand.name.ordinal()]++;
+        if (this.handCount)
+            handLossCount[hand.name.ordinal()]++;
     }
 
     /**
@@ -154,10 +167,13 @@ class Outcome {
         this.split += toMerge.split;
         this.loss += toMerge.loss;
 
-        for (int i = 0; i < HandName.values().length; i++) {
-            this.handWinCount[i] += toMerge.handWinCount[i];
-            this.handSplitCount[i] += toMerge.handSplitCount[i];
-            this.handLossCount[i] += toMerge.handLossCount[i];
+
+        if (this.handCount && toMerge.handCount) {
+            for (int i = 0; i < HandName.values().length; i++) {
+                this.handWinCount[i] += toMerge.handWinCount[i];
+                this.handSplitCount[i] += toMerge.handSplitCount[i];
+                this.handLossCount[i] += toMerge.handLossCount[i];
+            }
         }
 
         return this; // for chaining
@@ -169,7 +185,11 @@ class Outcome {
      */
     @Override
     public String toString() {
-        return "Win " + String.format("%8d", getWinCount()) + " \tSplit " + String.format("%8d", getSplitCount()) + " \tTotal " + String.format("%8d", getCount());
+        return "Win " + String.format("%8d", getWinCount()) + "\tSplit " + String.format("%8d", getSplitCount()) + " \tTotal " + String.format("%8d", getCount());
+    }
+
+    public String toValueString() {
+        return String.format("%8d", getWinCount()) + "\t" + String.format("%8d", getSplitCount()) + "\t" + String.format("%8d", getCount());
     }
 
     /**
