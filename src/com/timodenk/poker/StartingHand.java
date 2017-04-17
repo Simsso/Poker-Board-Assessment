@@ -12,6 +12,10 @@ public class StartingHand {
 
     public static final int ALL_COUNT = 1326;
 
+    public final int ID;
+
+    private static StartingHand[] allStartingHands = getAll();
+
     /**
      * Two poker cards (no specific order).
      *
@@ -21,6 +25,22 @@ public class StartingHand {
     public StartingHand(Card card1, Card card2) {
         this.card1 = card1;
         this.card2 = card2;
+        this.ID = getId(this);
+    }
+
+    private StartingHand(Card card1, Card card2, int id) {
+        this.card1 = card1;
+        this.card2 = card2;
+        this.ID = id;
+    }
+
+    private static int getId(StartingHand startingHand) {
+        for (int i = 0; i < allStartingHands.length; i++) {
+            if (allStartingHands[i].equalsNonIdBased(startingHand)) { // ID is not set yet so the normal equals method can not be used
+                return i;
+            }
+        }
+        throw new IllegalArgumentException("No ID was found for the given starting hand.");
     }
 
     /**
@@ -77,6 +97,9 @@ public class StartingHand {
         return pocketCards;
     }
 
+    /**
+     * @return An array of all 1326 possible starting hands.
+     */
     public static StartingHand[] getAll() {
         StartingHand[] pocketCards = new StartingHand[ALL_COUNT];
         int i = 0;
@@ -95,7 +118,8 @@ public class StartingHand {
                             continue; // no flippable combination for pairs (e.g. not both, (2D,2H) and (2H,2D)
                         }
 
-                        pocketCards[i++] = new StartingHand(new Card(rank1, suit1), new Card(rank2, suit2));
+                        pocketCards[i] = new StartingHand(new Card(rank1, suit1), new Card(rank2, suit2), i);
+                        i++;
                     }
                 }
             }
@@ -200,9 +224,13 @@ public class StartingHand {
         return output;
     }
 
-    public boolean equals(StartingHand h) {
+    private boolean equalsNonIdBased(StartingHand h) {
         boolean sameOrder = this.card1.equals(h.card1) && this.card2.equals(h.card2),
-            mixed = this.card1.equals(h.card2) && this.card2.equals(h.card1);
+                mixed = this.card1.equals(h.card2) && this.card2.equals(h.card1);
         return sameOrder || mixed;
+    }
+
+    public boolean equals(StartingHand h) {
+        return this.ID == h.ID;
     }
 }

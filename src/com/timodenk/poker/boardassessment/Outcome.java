@@ -145,9 +145,9 @@ class Outcome implements Serializable {
         return handWinCount[handName.ordinal()] + handSplitCount[handName.ordinal()] + handLossCount[handName.ordinal()];
     }
 
-    private long getWinCount() { return win; }
-    private long getSplitCount() { return split; }
-    private long getLossCount() { return split; }
+    long getWinCount() { return win; }
+    long getSplitCount() { return split; }
+    long getLossCount() { return split; }
 
     /**
      * Hand rate, meaning how often did a given hand occur.

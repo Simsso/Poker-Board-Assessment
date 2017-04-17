@@ -83,6 +83,7 @@ class StartingHandAnalysis {
             for (int i = 0; i < outcomes.length; i++) {
                 out.write((startingHands[i].toString() + "\t\t").getBytes(StandardCharsets.UTF_8));
             }
+            out.write(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();
         }
