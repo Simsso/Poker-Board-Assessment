@@ -6,27 +6,10 @@ import java.io.*;
 
 public class Program {
     public static void main(String[] args) {
-        File file = new File(args[0]);
-
-        try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-
-            // clear file
-            PrintWriter writer = new PrintWriter(file);
-            writer.print("");
-            writer.close();
-
-            StartingHandAnalysis.start(fileOutputStream, System.out);
-
-            fileOutputStream.flush();
-            fileOutputStream.close();
-
-        } catch (IOException e) {
+        try {
+            Outcome[][] outcome = Outcome.loadFromFile("/Users/Denk/Documents/Development/PokerBoardAssessment/out.dat");
+        } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();
         }
-
-
     }
 }

@@ -3,12 +3,14 @@ package com.timodenk.poker.boardassessment;
 import com.timodenk.poker.Hand;
 import com.timodenk.poker.HandName;
 
+import java.io.*;
+
 /**
  * The Outcome class is mostly used to store information about how a pocket hand / a player has performed over multiple iterations at a table.
  * The information is a combination of the Hand that the player had and whether they won, lost, or participated at a split pot.
  * The class offers functions so get the aggregated and simply processed values of the stored outcomes.
  */
-class Outcome {
+class Outcome implements Serializable {
     // counter for win, split, and loss
     private long win, split, loss;
 
@@ -188,7 +190,11 @@ class Outcome {
         return "Win " + String.format("%8d", getWinCount()) + "\tSplit " + String.format("%8d", getSplitCount()) + " \tTotal " + String.format("%8d", getCount());
     }
 
-    public String toValueString() {
+    /**
+     * Opposed to toString this method returns a string containing just the numbers and no description.
+     * @return A string containing the win, split, and total count.
+     */
+    String toValueString() {
         return String.format("%8d", getWinCount()) + "\t" + String.format("%8d", getSplitCount()) + "\t" + String.format("%8d", getCount());
     }
 
@@ -230,5 +236,30 @@ class Outcome {
             count += outcome.getCount(handName);
         }
         return count;
+    }
+
+    /**
+     * Loads an array of outcome arrays from a file.
+     * @param path The file path.
+     * @return The outcome objects which were stored in a serialized way.
+     * @throws IOException Error accessing the file.
+     * @throws ClassNotFoundException Error casting the file content to the return type.
+     */
+    static Outcome[][] loadFromFile(String path) throws IOException, ClassNotFoundException {
+        FileInputStream fileInputStream = new FileInputStream(path);
+        ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+        return (Outcome[][]) objectInputStream.readObject();
+    }
+
+    /**
+     * Stores an array of outcome arrays in a file.
+     * @param path The file path.
+     * @param outcome The data to store.
+     * @throws IOException Error accessing the file.
+     */
+    static void saveToFile(String path, Outcome[][] outcome) throws IOException {
+        FileOutputStream fileOutputStream = new FileOutputStream(path);
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+        objectOutputStream.writeObject(outcome);
     }
 }

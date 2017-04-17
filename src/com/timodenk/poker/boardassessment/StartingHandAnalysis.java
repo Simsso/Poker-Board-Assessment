@@ -3,8 +3,7 @@ package com.timodenk.poker.boardassessment;
 import com.timodenk.poker.CommunityCards;
 import com.timodenk.poker.StartingHand;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -104,5 +103,54 @@ class StartingHandAnalysis {
                 e.printStackTrace();
             }
         }
+    }
+
+    /**
+     * Loads an array of outcome arrays from a raw output file (not to be confused with a binary .dat file).
+     * @param path The file path.
+     * @return The stored outcomes.
+     */
+    static Outcome[][] loadFromRawOutputFile(String path) {
+        Outcome[][] outcome = new Outcome[StartingHand.ALL_COUNT][];
+        try (FileReader reader = new FileReader(path)) {
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            int i = 0, ctr = 0;
+            while (bufferedReader.ready()) {
+                ctr++;
+                String line = bufferedReader.readLine();
+                if (line.trim().length() == 0) {
+                    continue;
+                }
+                if (ctr == 1) {
+                    continue; // skip header
+                }
+                outcome[i] = new Outcome[StartingHand.ALL_COUNT];
+
+                String[] parts = line.split("\\s+"); // split at whitespace (e.g. tab, space)
+                for (int j = parts.length - 1, k = StartingHand.ALL_COUNT; j >= 2; j--) {
+                    if (parts[j].trim().length() == 0) {
+                        continue;
+                    }
+
+                    int total = Integer.parseInt(parts[j].trim()),
+                            split = Integer.parseInt(parts[--j].trim()),
+                            win = Integer.parseInt(parts[--j].trim());
+
+                    if (((total != 0) && (total != 1712304)) || ((win + split) > total)) {
+                        throw new IllegalArgumentException("Data file corrupted.");
+                    }
+
+                    int loss = total - win - split;
+                    outcome[i][--k] = new Outcome(win, split, loss);
+                }
+                i++;
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return outcome;
     }
 }
