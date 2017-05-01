@@ -17,15 +17,44 @@ public class ChainFinder {
     public static void main(String[] args) {
         try {
             final StartingHand[] startingHands = StartingHand.getAll();
-            final List<StartingHand>[] winsAgainst = getWinningAgainst(DATA_PATH);
+            final List<StartingHand>[] winsAgainst = getWinningAgainst(startingHands, DATA_PATH);
+
+            int ctr = 0;
+
+            for (int i = 0; i < winsAgainst.length; i++) { // all hands
+                int a = i;
+                for (int j = 0; j < winsAgainst[i].size(); j++) {
+                    int b = winsAgainst[i].get(j).ID; // all hands that a beats
+
+                    if (b > a) {
+                        continue;
+                    }
+
+                    for (int k = 0; k < winsAgainst[b].size(); k++) {
+                        int c = winsAgainst[b].get(k).ID; // all hands that b beats
+
+                        if (c > a) {
+                            continue;
+                        }
+
+                        if (winsAgainst[c].contains(startingHands[a])) { // if c beats a
+                            System.out.println(startingHands[a] + " > " + startingHands[b] + " > " + startingHands[c] + " > " + startingHands[a]);
+                            ctr++;
+                        }
+                    }
+                }
+            }
+            System.out.println(ctr + " chains found");
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
-
     private static List<StartingHand>[] getWinningAgainst(String path) throws IOException, ClassNotFoundException {
+        return getWinningAgainst(StartingHand.getAll(), path);
+    }
+
+    private static List<StartingHand>[] getWinningAgainst(StartingHand[] startingHands, String path) throws IOException, ClassNotFoundException {
         Outcome[][] outcome = Outcome.loadFromFile(path);
-        StartingHand[] startingHands = StartingHand.getAll();
         List<StartingHand>[] winsAgainst = new List[startingHands.length]; // length = 1326
 
         for (int i = 0; i < startingHands.length; i++) {
