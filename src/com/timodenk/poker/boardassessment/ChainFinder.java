@@ -15,6 +15,45 @@ public class ChainFinder {
     private static final String DATA_PATH = "/Users/Denk/Documents/Development/PokerBoardAssessment/out.dat";
 
     public static void main(String[] args) {
+        approachB();
+    }
+
+    private static void approachB() {
+        long ctr = 0;
+        try {
+            final double[][] m = getWinningMatrix(DATA_PATH);
+            final StartingHand[] startingHands = StartingHand.getAll();
+
+            for (int a = 0; a < m.length; a++) { // a = hand A id
+
+                for (int b = a + 1; b < m[a].length; b++) { // b = hand B id
+                    double ab = m[a][b]; // A wins against B by ab
+                    if (Double.isNaN(ab)) continue; // A can not play against B
+
+                    if (ab > 0) { // A wins against B
+
+                        for (int c = a + 1; c < m[b].length; c++) {
+                            double bc = m[b][c];
+                            if (Double.isNaN(bc)) continue; // B can not play against C
+
+                            if (bc > 0) {
+                                double ca = m[c][a];
+                                if (ca > 0) {
+                                    double min = Math.min(Math.min(ab, bc), ca);
+                                    System.out.println(startingHands[a] + "\t" + startingHands[b] + "\t" + startingHands[c] + "\t" + ab + "\t" + bc + "\t" + ca + "\t" + min);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            System.out.println(ctr + " chains found.");
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void approachA() {
         try {
             final StartingHand[] startingHands = StartingHand.getAll();
             final List<StartingHand>[] winsAgainst = getWinningAgainst(startingHands, DATA_PATH);
@@ -49,6 +88,7 @@ public class ChainFinder {
             e.printStackTrace();
         }
     }
+
     private static List<StartingHand>[] getWinningAgainst(String path) throws IOException, ClassNotFoundException {
         return getWinningAgainst(StartingHand.getAll(), path);
     }
@@ -69,5 +109,34 @@ public class ChainFinder {
         }
 
         return winsAgainst;
+    }
+
+
+    /**
+     * Reads a winning matrix out of a serialized file.
+     * The first index represents the hand A that plays against hand B (second index): matrix[A][B].
+     * The matrix has the following values:
+     *  - A number [-1,1] which represents the win probability of A over B minus B over A. If A wins more often against B then B against A, this value is positive.
+     *  - NaN: The cards can not play against each other.
+     * @param path File to load the data from.
+     * @return The matrix.
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    private static double[][] getWinningMatrix(String path) throws IOException, ClassNotFoundException {
+        Outcome[][] outcome = Outcome.loadFromFile(path);
+        double[][] matrix = new double[outcome.length][];
+        for (int i = 0; i < outcome.length; i++) {
+            matrix[i] = new double[outcome[i].length];
+            for (int j = 0; j < outcome[i].length; j++) {
+                if (outcome[i][j].getWinCount() + outcome[i][j].getSplitCount() + outcome[i][j].getLossCount() == 0) {
+                    matrix[i][j] = Double.NaN;
+                }
+                else {
+                    matrix[i][j] = outcome[i][j].getWinRate() - outcome[j][i].getWinRate();
+                }
+            }
+        }
+        return matrix;
     }
 }
