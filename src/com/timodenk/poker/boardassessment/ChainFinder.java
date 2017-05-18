@@ -1,7 +1,10 @@
 package com.timodenk.poker.boardassessment;
 
 import com.timodenk.poker.StartingHand;
+import org.json.JSONArray;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,11 +18,17 @@ public class ChainFinder {
     private static final String DATA_PATH = "/Users/Denk/Documents/Development/PokerBoardAssessment/out.dat";
 
     public static void main(String[] args) {
-        approachB();
+        try {
+            saveWinningMatrix("/Users/Denk/Documents/Development/PokerBoardAssessment/matrix.json", DATA_PATH);
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void approachB() {
         long ctr = 0;
+
+        double maxmin = 0;
         try {
             final double[][] m = getWinningMatrix(DATA_PATH);
             final StartingHand[] startingHands = StartingHand.getAll();
@@ -28,19 +37,25 @@ public class ChainFinder {
 
                 for (int b = a + 1; b < m[a].length; b++) { // b = hand B id
                     double ab = m[a][b]; // A wins against B by ab
-                    if (Double.isNaN(ab)) continue; // A can not play against B
 
                     if (ab > 0) { // A wins against B
 
                         for (int c = a + 1; c < m[b].length; c++) {
                             double bc = m[b][c];
-                            if (Double.isNaN(bc)) continue; // B can not play against C
 
                             if (bc > 0) {
-                                double ca = m[c][a];
-                                if (ca > 0) {
-                                    double min = Math.min(Math.min(ab, bc), ca);
-                                    System.out.println(startingHands[a] + "\t" + startingHands[b] + "\t" + startingHands[c] + "\t" + ab + "\t" + bc + "\t" + ca + "\t" + min);
+
+                                for (int d = a + 1; d < m[c].length; d++) {
+                                    double cd = m[c][d];
+                                    double da = m[d][a];
+                                    if (cd > 0 && da > 0) {
+                                        double min = Math.min(Math.min(ab, bc), Math.min(cd, da));
+                                        ctr++;
+                                        if (min > maxmin) {
+                                            maxmin = min;
+                                            System.out.println(startingHands[a] + "\t" + startingHands[b] + "\t" + startingHands[c] + "\t" + startingHands[d] + "\t" + ab + "\t" + bc + "\t" + cd + "\t" + da + "\t" + min);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -87,6 +102,23 @@ public class ChainFinder {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void saveWinningMatrix(String path, String matrixPath) throws IOException, ClassNotFoundException {
+        double[][] m = getWinningMatrix(matrixPath);
+        JSONArray jsonArray = new JSONArray();
+        for (int i = 0; i < m.length; i++) {
+            JSONArray row = new JSONArray();
+            for (int j = 0; j < m[i].length; j++) {
+                row.put(j, (Double.isNaN(m[i][j]) ? "NaN" : new java.text.DecimalFormat("#.########").format(m[i][j])));
+            }
+            jsonArray.put(i, row);
+        }
+        String json = jsonArray.toString().replaceAll("\"", "").replaceAll("0\\.", ".");
+
+        FileWriter fileWriter = new FileWriter(new File(path));
+        fileWriter.write(json);
+        fileWriter.close();
     }
 
     private static List<StartingHand>[] getWinningAgainst(String path) throws IOException, ClassNotFoundException {
