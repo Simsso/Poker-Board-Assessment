@@ -16,12 +16,122 @@ import java.util.List;
  */
 public class ChainFinder {
     private static final String DATA_PATH = "/Users/Denk/Documents/Development/PokerBoardAssessment/out.dat";
+    private static List<int[]> chains = new ArrayList<>();
+    private static int chainCtr = 0;
 
-    public static void main(String[] args) {
+    private static double[][] m = new double[0][];
+    private static double[][] adjacencyMatrix = new double[0][];
+
+    private static final StartingHand[] startingHands = StartingHand.getAll();
+
+    private static long startTime = 0;
+
+    static {
         try {
-            saveWinningMatrix("/Users/Denk/Documents/Development/PokerBoardAssessment/matrix.json", DATA_PATH);
+            m = getWinningMatrix(DATA_PATH);
+            adjacencyMatrix= getAdjacencyMatrix(m);
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
+        }
+        startTime = System.nanoTime();
+    }
+
+    public static void main(String[] args) {
+        involvedInChainsOfLength();
+    }
+
+    private static void involvedInChainsOfLength() {
+        for (int i = 0; i < startingHands.length; i++) {
+            System.out.print(startingHands[i] + "\t");
+        }
+        System.out.println();
+
+        // copy adjacency matrix
+        double[][] multipliedMatrix = new double[adjacencyMatrix.length][];
+        for (int i = 0; i < m.length; i++) {
+            multipliedMatrix[i] = new double[adjacencyMatrix[i].length];
+            for (int j = 0; j < m[i].length; j++) {
+                multipliedMatrix[i][j] = adjacencyMatrix[i][j];
+            }
+        }
+
+
+        for (int l = 2; l < m.length; l++) {
+            multipliedMatrix = matrixMultiplication(multipliedMatrix, adjacencyMatrix);
+            normalizeMatrix(multipliedMatrix);
+            printMatrixMainDiagonal(multipliedMatrix);
+        }
+    }
+
+    private static void normalizeMatrix(double[][] m) {
+        for (int i = 0; i < m.length; i++) {
+            for (int j = 0; j < m[i].length; j++) {
+                m[i][j] = (m[i][j] == 0) ? 0 : 1;
+            }
+        }
+    }
+
+    private static void printMatrixMainDiagonal(double[][] m) {
+        for (int i = 0; i < m.length && i < m[i].length; i++) {
+            System.out.print((m[i][i] == 0) ? 0 : 1);
+            System.out.print("\t");
+        }
+        System.out.println();
+    }
+
+    private static double[][] matrixMultiplication(double[][] A, double[][] B) {
+        int aRows = A.length;
+        int aColumns = A[0].length;
+        int bRows = B.length;
+        int bColumns = B[0].length;
+
+        if (aColumns != bRows) {
+            throw new IllegalArgumentException("A:Rows: " + aColumns + " did not match B:Columns " + bRows + ".");
+        }
+
+        double[][] C = new double[aRows][bColumns];
+
+        for (int i = 0; i < aRows; i++) { // aRow
+            for (int j = 0; j < bColumns; j++) { // bColumn
+                for (int k = 0; k < aColumns; k++) { // aColumn
+                    C[i][j] += A[i][k] * B[k][j];
+                }
+            }
+        }
+
+        return C;
+    }
+
+
+    private static void chain(int startID, int targetLength) {
+        if (targetLength < 3) {
+            chainCtr = 0;
+            return;
+        }
+        int[] emptyChain = new int[targetLength];
+        emptyChain[0] = startID;
+        chain(emptyChain, 1);
+    }
+
+    private static void chain(int[] elementIDs, int currentLength) {
+        if (elementIDs.length == currentLength) {
+            if (m[elementIDs[elementIDs.length - 1]][elementIDs[0]] > 0) {
+                //chains.add(elementIDs);
+                chainCtr++;
+            }
+            return;
+        }
+
+        int last = elementIDs[currentLength - 1];
+        for (int i = elementIDs[0] + 1; i < m.length; i++) {
+            for (int j = 1; j < currentLength; j++) {
+                if (elementIDs[j] == i) continue; // same element can not occur in a chain twice
+            }
+
+            if (m[last][i] > 0) {
+                elementIDs[currentLength] = i;
+                chain(elementIDs, currentLength + 1);
+            }
         }
     }
 
@@ -29,32 +139,28 @@ public class ChainFinder {
         long ctr = 0;
 
         double maxmin = 0;
-        try {
-            final double[][] m = getWinningMatrix(DATA_PATH);
-            final StartingHand[] startingHands = StartingHand.getAll();
 
-            for (int a = 0; a < m.length; a++) { // a = hand A id
+        for (int a = 0; a < m.length; a++) { // a = hand A id
 
-                for (int b = a + 1; b < m[a].length; b++) { // b = hand B id
-                    double ab = m[a][b]; // A wins against B by ab
+            for (int b = a + 1; b < m[a].length; b++) { // b = hand B id
+                double ab = m[a][b]; // A wins against B by ab
 
-                    if (ab > 0) { // A wins against B
+                if (ab > 0) { // A wins against B
 
-                        for (int c = a + 1; c < m[b].length; c++) {
-                            double bc = m[b][c];
+                    for (int c = a + 1; c < m[b].length; c++) {
+                        double bc = m[b][c];
 
-                            if (bc > 0) {
+                        if (bc > 0) {
 
-                                for (int d = a + 1; d < m[c].length; d++) {
-                                    double cd = m[c][d];
-                                    double da = m[d][a];
-                                    if (cd > 0 && da > 0) {
-                                        double min = Math.min(Math.min(ab, bc), Math.min(cd, da));
-                                        ctr++;
-                                        if (min > maxmin) {
-                                            maxmin = min;
-                                            System.out.println(startingHands[a] + "\t" + startingHands[b] + "\t" + startingHands[c] + "\t" + startingHands[d] + "\t" + ab + "\t" + bc + "\t" + cd + "\t" + da + "\t" + min);
-                                        }
+                            for (int d = a + 1; d < m[c].length; d++) {
+                                double cd = m[c][d];
+                                double da = m[d][a];
+                                if (cd > 0 && da > 0) {
+                                    double min = Math.min(Math.min(ab, bc), Math.min(cd, da));
+                                    ctr++;
+                                    if (min > maxmin) {
+                                        maxmin = min;
+                                        System.out.println(startingHands[a] + "\t" + startingHands[b] + "\t" + startingHands[c] + "\t" + startingHands[d] + "\t" + ab + "\t" + bc + "\t" + cd + "\t" + da + "\t" + min);
                                     }
                                 }
                             }
@@ -62,10 +168,8 @@ public class ChainFinder {
                     }
                 }
             }
-            System.out.println(ctr + " chains found.");
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
         }
+        System.out.println(ctr + " chains found.");
     }
 
     private static void approachA() {
@@ -170,5 +274,21 @@ public class ChainFinder {
             }
         }
         return matrix;
+    }
+
+    private static double[][] getAdjacencyMatrix(double[][] winMatrix) {
+        double[][] adjacencyMatrix = new double[winMatrix.length][];
+        for (int i = 0; i < winMatrix.length; i++) {
+            adjacencyMatrix[i] = new double[winMatrix[i].length];
+            for (int j = 0; j < winMatrix[i].length; j++) {
+                if (Double.isNaN(winMatrix[i][j]) || winMatrix[i][j] <= 0) {
+                    adjacencyMatrix[i][j] = 0;
+                }
+                else {
+                    adjacencyMatrix[i][j] = 1;
+                }
+            }
+        }
+        return adjacencyMatrix;
     }
 }
