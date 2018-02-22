@@ -47,4 +47,13 @@ public class Card implements Comparable<Card> {
     public String toString() {
         return String.format("%s%s", this.rank.toString(), this.suit.toString());
     }
+
+    /**
+     * Converts the card into a string with ascii symbols and a comma between rank and suit.
+     *
+     * @return String containing both suit and rank information. The suit is using the UTF symbols for card suits.
+     */
+    public String toCommaAsciiString() {
+        return String.format("'%s','%s'", this.rank.toString(), this.suit.toAscii());
+    }
 }

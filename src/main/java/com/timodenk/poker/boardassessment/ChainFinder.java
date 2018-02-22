@@ -3,6 +3,7 @@ package com.timodenk.poker.boardassessment;
 import com.timodenk.poker.StartingHand;
 import org.json.JSONArray;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -36,8 +37,36 @@ public class ChainFinder {
         startTime = System.nanoTime();
     }
 
-    public static void main(String[] args) {
-        involvedInChainsOfLength();
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File("sql_create.txt")))) {
+
+            //writer.write("insert into `poker`.`odds_headsup_preflop`\n" +
+                    //"(`hand1_rank1`, `hand1_suit1`, `hand1_rank2`, `hand1_suit2`, `hand2_rank1`, `hand2_suit1`, `hand2_rank2`, `hand2_suit2`, `win`, `split`, `loss`)\n" +
+                    //"values\n");
+
+            Outcome[][] outcome = Outcome.loadFromFile(DATA_PATH);
+            long max = 0;
+            for (int i = 0; i < outcome.length; i++) {
+                for (int j = 0; j < outcome.length; j++) {
+                    String line = "(" +
+                            startingHands[i].card1.toCommaAsciiString().toLowerCase() + "," +
+                            startingHands[i].card2.toCommaAsciiString().toLowerCase() + "," +
+                            startingHands[j].card1.toCommaAsciiString().toLowerCase() + "," +
+                            startingHands[j].card2.toCommaAsciiString().toLowerCase() + "," +
+                            outcome[i][j].getWinCount() + "," +
+                            outcome[i][j].getSplitCount() + "," +
+                            outcome[i][j].getLossCount() + ")" + System.lineSeparator();
+                    writer.write(line);
+                    System.out.print(line);
+                    if (false && max < outcome[i][j].getWinCount()) {
+                        max = outcome[i][j].getWinCount();
+                        System.out.println(startingHands[i] + " " + startingHands[j] + " " + outcome[i][j].getWinCount() + " loosing only " + outcome[i][j].getLossCount() + " and " + outcome[i][j].getSplitCount() + " splits");
+                    }
+                }
+            }
+
+        }
+        //involvedInChainsOfLength();
     }
 
     private static void involvedInChainsOfLength() {
@@ -57,26 +86,42 @@ public class ChainFinder {
 
 
         for (int l = 2; l < m.length; l++) {
-            multipliedMatrix = matrixMultiplication(multipliedMatrix, adjacencyMatrix);
-            normalizeMatrix(multipliedMatrix);
-            printMatrixMainDiagonal(multipliedMatrix);
+            double[][] nextMatrix = matrixMultiplication(multipliedMatrix, adjacencyMatrix);
+            subtractFromMatrix(nextMatrix, multipliedMatrix);
+            printMatrixMainDiagonal(nextMatrix);
+            setMatrixMainDiagonal(nextMatrix, 0);
+            multipliedMatrix = nextMatrix;
         }
     }
 
     private static void normalizeMatrix(double[][] m) {
         for (int i = 0; i < m.length; i++) {
             for (int j = 0; j < m[i].length; j++) {
-                m[i][j] = (m[i][j] == 0) ? 0 : 1;
+                m[i][j] = (m[i][j] <= 0) ? 0 : m[i][j];
             }
         }
     }
 
     private static void printMatrixMainDiagonal(double[][] m) {
         for (int i = 0; i < m.length && i < m[i].length; i++) {
-            System.out.print((m[i][i] == 0) ? 0 : 1);
+            System.out.print((m[i][i] <= 0) ? 0 : 1);
             System.out.print("\t");
         }
         System.out.println();
+    }
+
+    private static void setMatrixMainDiagonal(double[][] m, double value) {
+        for (int i = 0; i < m.length && i < m[i].length; i++) {
+            m[i][i] = value;
+        }
+    }
+
+    private static void subtractFromMatrix(double[][] A, double[][] B) {
+        for (int i = 0; i < m.length; i++) {
+            for (int j = 0; j < m[i].length; j++) {
+                A[i][j] = A[i][j] - B[i][j];
+            }
+        }
     }
 
     private static double[][] matrixMultiplication(double[][] A, double[][] B) {

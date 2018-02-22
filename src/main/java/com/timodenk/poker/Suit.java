@@ -5,19 +5,21 @@ package com.timodenk.poker;
  * Suits can not be compared with each other.
  */
 public enum Suit {
-    HEARTS('\u2665'), // UTF symbol for hearts
-    DIAMONDS('\u2666'), // UTF symbol for diamonds
-    SPADES('\u2660'), // UTF symbol for spades
-    CLUBS('\u2663'); // UTF symbol for clubs
+    HEARTS('\u2665', 'H'), // UTF symbol for hearts
+    DIAMONDS('\u2666', 'D'), // UTF symbol for diamonds
+    SPADES('\u2660', 'S'), // UTF symbol for spades
+    CLUBS('\u2663', 'C'); // UTF symbol for clubs
 
-    public final char shortForm; // short form (UTF character)
+    public final char shortForm, // short form (UTF character)
+        ascii;
 
     /**
      * Constructor method.
-     * @param shortForm Charakter that describes the suit (here the corresponding UTF symbol).
+     * @param shortForm Character that describes the suit (here the corresponding UTF symbol).
      */
-    Suit(char shortForm) {
+    Suit(char shortForm, char ascii) {
         this.shortForm = shortForm;
+        this.ascii = ascii;
     }
 
     /**
@@ -26,6 +28,10 @@ public enum Suit {
     @Override
     public String toString() {
         return String.valueOf(this.shortForm);
+    }
+
+    public String toAscii() {
+        return String.valueOf(this.ascii);
     }
 
     public Suit getPermutation(Suit[] permutation) {

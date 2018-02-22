@@ -147,7 +147,7 @@ class Outcome implements Serializable {
 
     long getWinCount() { return win; }
     long getSplitCount() { return split; }
-    long getLossCount() { return split; }
+    long getLossCount() { return loss; }
 
     /**
      * Hand rate, meaning how often did a given hand occur.
